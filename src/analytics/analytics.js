@@ -4,7 +4,7 @@
 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import { getSession } from '../hooks/useSession'
+import { getSession, getDisplayName } from '../hooks/useSession'
 import { getDeviceInfo } from './deviceInfo'
 
 const DEVICE_KEY = 'korea_trip_device_id' // 每支手機唯一 ID，存 localStorage，重複開啟同一 ID
@@ -46,7 +46,7 @@ export async function track(type, { page = '', ...extra } = {}) {
       sessionId: SESSION_ID,
       type,                        // session_start / page_view / feature_click / heartbeat / session_end
       page,                        // 頁面名稱 或 功能名稱
-      userName: session?.name || '', // 沿用 onboarding 姓名，方便後台對應到人
+      userName: getDisplayName(session), // 顯示名稱（暱稱優先，否則真實姓名）
       timestamp: serverTimestamp(), // 伺服器時間（後台計算用）
       clientTime: Date.now(),       // client 時間 fallback
       ...extra,
@@ -62,7 +62,12 @@ let sessionStarted = false
 export function trackSessionStart() {
   if (sessionStarted) return
   sessionStarted = true
-  return track('session_start', { deviceInfo: getDeviceInfo() })
+  const s = getSession()
+  return track('session_start', {
+    deviceInfo: getDeviceInfo(),
+    realName: s?.realName || s?.name || '', // 背景資料：日後住宿房間對應用
+    nickname: s?.nickname || '',
+  })
 }
 
 // ── 目前所在頁面：給錯誤追蹤用（錯誤發生時不一定拿得到 router 狀態） ──

@@ -1,7 +1,7 @@
 {
-  "name": "韓國旅行即時行程看板",
-  "short_name": "韓國行程",
-  "description": "韓國旅行即時行程看板網站",
+  "name": "釜山之旅",
+  "short_name": "釜山之旅",
+  "description": "釜山之旅",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

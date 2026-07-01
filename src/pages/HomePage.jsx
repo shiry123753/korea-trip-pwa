@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSession, clearSession } from '../hooks/useSession'
+import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
 import { useGpsProgress } from '../hooks/useGpsProgress'
 import { getTodayDayData, getCurrentAndNextSpot } from '../data/itinerary'
 import WeatherCard from '../components/WeatherCard'
@@ -25,14 +25,15 @@ export default function HomePage() {
       <div className={styles.hero}>
         <div className={styles.heroTop}>
           <span className={styles.dayTag}>
-            {isTripDate ? `${todayDay.label}・${todayDay.subtitle}` : '釜山旅行'}
+            嗨，{getDisplayName(session)}！
           </span>
           <button className={styles.profileBtn} onClick={() => { track('feature_click', { page: 'open_profile' }); setShowProfile(true) }}>
             <img src={session?.avatar} alt="avatar" className={styles.profileImg} />
           </button>
         </div>
         <div className={styles.heroTitle}>
-          {session?.name ? `嗨，${session.name}！` : '今日行程'}
+          <span className={styles.heroLine}>嘉義有個阿里山</span>
+          <span className={styles.heroLine}>全家一起去釜山</span>
         </div>
         {isTripDate && current && (
           <div className={styles.heroSub}>目前：{current.emoji} {current.name}</div>
@@ -165,7 +166,7 @@ function ProfileSheet({ session, onClose }) {
         <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:24 }}>
           <img src={session?.avatar} alt="" style={{ width:60, height:60, borderRadius:'50%', objectFit:'contain', border:'2px solid rgba(0,0,0,0.08)' }} />
           <div>
-            <div style={{ fontSize:20, fontWeight:800 }}>{session?.name}</div>
+            <div style={{ fontSize:20, fontWeight:800 }}>{getDisplayName(session)}</div>
             <div style={{ fontSize:14, color:'#8a7f76', marginTop:2 }}>釜山旅行 7/4 – 7/8</div>
           </div>
         </div>
