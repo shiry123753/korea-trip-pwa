@@ -1,4 +1,4 @@
-import { useState } from 'react'
+ㄋimport { useState } from 'react'
 import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
 import { useGpsProgress } from '../hooks/useGpsProgress'
 import { getTodayDayData, getCurrentAndNextSpot } from '../data/itinerary'
@@ -32,12 +32,8 @@ export default function HomePage() {
           </button>
         </div>
         <div className={styles.heroTitle}>
-<<<<<<< HEAD
-          嘉義有個阿里山 全家一起去釜山
-=======
           <span className={styles.heroLine}>嘉義有個阿里山</span>
           <span className={styles.heroLine}>全家一起去釜山</span>
->>>>>>> dev
         </div>
         {isTripDate && current && (
           <div className={styles.heroSub}>目前：{current.emoji} {current.name}</div>
