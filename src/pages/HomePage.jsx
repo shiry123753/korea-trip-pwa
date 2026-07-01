@@ -32,7 +32,7 @@ export default function HomePage() {
           </button>
         </div>
         <div className={styles.heroTitle}>
-          {session?.name ? `嗨，${session.name}！` : '今日行程'}
+          嘉義有個阿里山 全家一起去釜山
         </div>
         {isTripDate && current && (
           <div className={styles.heroSub}>目前：{current.emoji} {current.name}</div>
