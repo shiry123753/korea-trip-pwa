@@ -4,14 +4,54 @@
 // - 可選「每 30 秒自動刷新」
 // - 圖表用純 SVG / CSS 手刻，維持日系雜誌風，不引入額外套件
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { computeMetrics, fmtDuration, fmtDateTime } from '../analytics/metrics'
+import { formatDeviceInfo } from '../analytics/deviceInfo'
 import styles from './AnalyticsPage.module.css'
 
 const PASSWORD = import.meta.env.VITE_ANALYTICS_PASSWORD
 const UNLOCK_KEY = 'analytics_unlocked'
+
+const RANGE_OPTS = [
+  { key: 'today', label: '今天' },
+  { key: '7d', label: '最近 7 天' },
+  { key: 'all', label: '全部' },
+]
+
+function rowMs(r) {
+  if (r.timestamp && typeof r.timestamp.toMillis === 'function') return r.timestamp.toMillis()
+  if (typeof r.clientTime === 'number') return r.clientTime
+  return 0
+}
+
+function filterByRange(rows, range) {
+  if (range === 'all') return rows
+  let cutoff = 0
+  if (range === 'today') { const d = new Date(); d.setHours(0, 0, 0, 0); cutoff = d.getTime() }
+  else if (range === '7d') { cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000 }
+  return rows.filter((r) => rowMs(r) >= cutoff)
+}
+
+function csvEscape(v) {
+  const s = v == null ? '' : String(v)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+function buildCsv(rows) {
+  const header = ['deviceId', 'name', 'type', 'page', 'timestamp', 'deviceInfo']
+  const sorted = [...rows].sort((a, b) => rowMs(a) - rowMs(b))
+  const lines = [header.join(',')]
+  for (const r of sorted) {
+    const info = r.deviceInfo
+      ? [r.deviceInfo.type, r.deviceInfo.os, r.deviceInfo.browser, r.deviceInfo.screenSize].filter(Boolean).join(' / ')
+      : ''
+    const ts = rowMs(r) ? new Date(rowMs(r)).toISOString() : ''
+    lines.push([r.deviceId, r.userName, r.type, r.page, ts, info].map(csvEscape).join(','))
+  }
+  return lines.join('\n')
+}
 
 export default function AnalyticsPage() {
   const [unlocked, setUnlocked] = useState(() => {
@@ -63,19 +103,19 @@ function PasswordGate({ onUnlock }) {
 
 /* ── 主儀表板 ─────────────────────────── */
 function Dashboard() {
-  const [metrics, setMetrics] = useState(null)
+  const [rawEvents, setRawEvents] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatedAt, setUpdatedAt] = useState(null)
   const [autoRefresh, setAutoRefresh] = useState(false)
+  const [range, setRange] = useState('all')
   const timerRef = useRef(null)
 
   const load = useCallback(async () => {
     setError('')
     try {
       const snap = await getDocs(collection(db, 'analytics_events'))
-      const rows = snap.docs.map((d) => d.data())
-      setMetrics(computeMetrics(rows))
+      setRawEvents(snap.docs.map((d) => d.data()))
       setUpdatedAt(Date.now())
     } catch (e) {
       setError(e?.message || '讀取失敗，請確認 Firestore 安全性規則允許讀取 analytics_events')
@@ -83,6 +123,34 @@ function Dashboard() {
       setLoading(false)
     }
   }, [])
+
+  // 篩選區間套用到：總覽 / 排名 / 趨勢 / 漏斗 / CSV
+  const filteredEvents = useMemo(
+    () => (rawEvents ? filterByRange(rawEvents, range) : []),
+    [rawEvents, range],
+  )
+  const metrics = useMemo(
+    () => (rawEvents ? computeMetrics(filteredEvents) : null),
+    [rawEvents, filteredEvents],
+  )
+  // 成員表格 + 錯誤紀錄：永遠用全部時間
+  const allMetrics = useMemo(
+    () => (rawEvents ? computeMetrics(rawEvents) : null),
+    [rawEvents],
+  )
+
+  function handleExportCsv() {
+    const csv = '﻿' + buildCsv(filteredEvents) // BOM：讓 Excel 正確顯示中文
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `analytics_${range}_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   useEffect(() => { load() }, [load])
 
@@ -110,8 +178,22 @@ function Dashboard() {
             <span>每 30 秒自動刷新</span>
           </label>
           <button className={styles.refreshBtn} onClick={load}>↻ 立即刷新</button>
+          <button className={styles.refreshBtn} onClick={handleExportCsv} disabled={!rawEvents}>⬇ 匯出 CSV</button>
         </div>
       </header>
+
+      <div className={styles.rangeBar}>
+        {RANGE_OPTS.map((r) => (
+          <button
+            key={r.key}
+            className={`${styles.rangeChip}${range === r.key ? ` ${styles.rangeOn}` : ''}`}
+            onClick={() => setRange(r.key)}
+          >
+            {r.label}
+          </button>
+        ))}
+        <span className={styles.rangeHint}>套用到總覽 / 排名 / 趨勢 / 漏斗（下方成員表格永遠顯示全部時間）</span>
+      </div>
 
       {updatedAt && (
         <div className={styles.updatedAt}>最後更新：{fmtDateTime(updatedAt)}</div>
@@ -135,28 +217,33 @@ function Dashboard() {
             </div>
           )}
 
-          {/* 每個人的使用情況 */}
-          <Section title="每個人的使用情況">
+          {/* 每個人的使用情況（全部時間累計，不受篩選影響）*/}
+          <Section title="每個人的使用情況（全部時間累計）">
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>成員</th>
+                    <th>成員 / 裝置</th>
                     <th className={styles.num}>開啟次數</th>
                     <th className={styles.num}>總停留</th>
                     <th className={styles.num}>最後使用</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {metrics.devices.map((d) => (
+                  {allMetrics.devices.map((d) => (
                     <tr key={d.deviceId}>
-                      <td>{d.name || <span className={styles.muted}>未命名（{d.deviceId.slice(0, 6)}）</span>}</td>
+                      <td>
+                        {d.name
+                          ? <span className={styles.memberName}>{d.name}</span>
+                          : <span className={styles.muted}>未命名（{d.deviceId.slice(0, 6)}）</span>}
+                        <div className={styles.deviceMeta}>{formatDeviceInfo(d.deviceInfo) || '裝置資訊未知'}</div>
+                      </td>
                       <td className={styles.num}>{d.sessions}</td>
                       <td className={styles.num}>{fmtDuration(d.totalStay)}</td>
                       <td className={styles.num}>{fmtDateTime(d.lastSeen)}</td>
                     </tr>
                   ))}
-                  {metrics.devices.length === 0 && (
+                  {allMetrics.devices.length === 0 && (
                     <tr><td colSpan={4} className={styles.muted}>尚無資料</td></tr>
                   )}
                 </tbody>
@@ -181,9 +268,19 @@ function Dashboard() {
             />
           </Section>
 
+          {/* 使用路徑漏斗 */}
+          <Section title="使用路徑漏斗（曾造訪過該頁面的人數）">
+            <FunnelChart steps={metrics.funnel} />
+          </Section>
+
           {/* 每日活躍趨勢 */}
           <Section title="每日活躍趨勢（不重複人數）">
             <LineChart data={metrics.daily} />
+          </Section>
+
+          {/* 錯誤紀錄（全部時間）*/}
+          <Section title="錯誤紀錄">
+            <ErrorList items={allMetrics.errors} />
           </Section>
         </>
       )}
@@ -229,6 +326,47 @@ function BarList({ items, suffix = '' }) {
             <div className={styles.barFill} style={{ width: `${(i.value / max) * 100}%` }} />
           </div>
           {i.sub && <div className={styles.barSub}>{i.sub}</div>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function FunnelChart({ steps }) {
+  if (!steps || steps.length === 0) return <div className={styles.muted}>尚無資料</div>
+  const max = Math.max(...steps.map((s) => s.count), 1)
+  return (
+    <div className={styles.funnel}>
+      {steps.map((s, i) => (
+        <div key={s.stage} className={styles.funnelRow}>
+          <div className={styles.funnelHead}>
+            <span className={styles.funnelStage}>{i + 1}. {s.stage}</span>
+            <span className={styles.funnelCount}>
+              {s.count} 人
+              {i > 0 && <span className={styles.funnelRet}> · 留存 {Math.round(s.retention)}%</span>}
+            </span>
+          </div>
+          <div className={styles.funnelTrack}>
+            <div className={styles.funnelFill} style={{ width: `${(s.count / max) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ErrorList({ items }) {
+  if (!items || items.length === 0) return <div className={styles.okHint}>目前沒有錯誤紀錄 👍</div>
+  return (
+    <div className={styles.errList}>
+      {items.map((e, i) => (
+        <div key={i} className={styles.errRow}>
+          <div className={styles.errTop}>
+            <span className={styles.errPage}>{e.page}</span>
+            <span className={styles.errTime}>{fmtDateTime(e.ms)}</span>
+          </div>
+          <div className={styles.errMsg}>{e.message}</div>
+          <div className={styles.errWho}>{e.name || '未命名'}（{e.deviceId.slice(0, 6)}）</div>
         </div>
       ))}
     </div>

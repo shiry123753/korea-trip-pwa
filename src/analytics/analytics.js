@@ -5,6 +5,7 @@
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { getSession } from '../hooks/useSession'
+import { getDeviceInfo } from './deviceInfo'
 
 const DEVICE_KEY = 'korea_trip_device_id' // 每支手機唯一 ID，存 localStorage，重複開啟同一 ID
 const COLLECTION = 'analytics_events'
@@ -56,9 +57,35 @@ export async function track(type, { page = '', ...extra } = {}) {
 }
 
 // session_start 每次開啟只記一筆（避免 StrictMode / 重複掛載重複送）
+// deviceInfo 只在 session_start 記一次，避免每個事件都存造成資料量暴增。
 let sessionStarted = false
 export function trackSessionStart() {
   if (sessionStarted) return
   sessionStarted = true
-  return track('session_start')
+  return track('session_start', { deviceInfo: getDeviceInfo() })
+}
+
+// ── 目前所在頁面：給錯誤追蹤用（錯誤發生時不一定拿得到 router 狀態） ──
+let currentPage = 'home'
+export function setCurrentPage(page) { currentPage = page || 'home' }
+export function getCurrentPage() { return currentPage }
+
+// ── 記錄一筆錯誤事件 ──
+export function trackError(message, page) {
+  const msg = String(message || 'Unknown error').slice(0, 300) // 只存簡短訊息，不存完整 stack
+  return track('error', { page: page || currentPage, message: msg })
+}
+
+// ── 全域錯誤攔截（React 以外的未捕捉錯誤）──
+let errorTrackingInit = false
+export function initErrorTracking() {
+  if (errorTrackingInit || typeof window === 'undefined') return
+  errorTrackingInit = true
+  window.addEventListener('error', (e) => {
+    trackError(e?.message || e?.error?.message || 'window.onerror')
+  })
+  window.addEventListener('unhandledrejection', (e) => {
+    const reason = e?.reason
+    trackError(reason?.message || String(reason) || 'unhandledrejection')
+  })
 }

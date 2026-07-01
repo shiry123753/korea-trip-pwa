@@ -1,6 +1,9 @@
 // 後台指標計算：把 analytics_events 的原始事件，整理成後台要顯示的數字。
 // 停留時間定義：同一個 sessionId 的最早與最晚事件時間相減。
 
+// 使用路徑漏斗的預設階段（依 App 實際頁面順序）
+export const FUNNEL_STAGES = ['onboarding', 'home', 'itinerary', 'rooms']
+
 function eventMillis(e) {
   if (e.timestamp && typeof e.timestamp.toMillis === 'function') return e.timestamp.toMillis()
   if (typeof e.clientTime === 'number') return e.clientTime
@@ -37,19 +40,28 @@ export function computeMetrics(rawEvents) {
     if (e.deviceId) s.deviceId = e.deviceId
   }
 
+  // ── deviceInfo：deviceId -> 裝置資訊（只在 session_start 記錄，取最新一筆）──
+  const deviceInfoMap = new Map()
+  for (const e of events) {
+    if (e.deviceInfo && e.deviceId) deviceInfoMap.set(e.deviceId, e.deviceInfo)
+  }
+
   // ── devices：deviceId -> 匯總 ──
   const devices = new Map()
   for (const s of sessions.values()) {
     const key = s.deviceId || '(unknown)'
     let d = devices.get(key)
     if (!d) {
-      d = { deviceId: key, name: s.name || '', sessions: 0, totalStay: 0, lastSeen: 0 }
+      d = { deviceId: key, name: s.name || '', sessions: 0, totalStay: 0, lastSeen: 0, deviceInfo: null }
       devices.set(key, d)
     }
     d.sessions += 1
     d.totalStay += Math.max(0, s.max - s.min)
     if (s.max > d.lastSeen) d.lastSeen = s.max
     if (s.name) d.name = s.name
+  }
+  for (const d of devices.values()) {
+    d.deviceInfo = deviceInfoMap.get(d.deviceId) || null
   }
 
   const deviceList = [...devices.values()].sort((a, b) => b.lastSeen - a.lastSeen)
@@ -116,6 +128,33 @@ export function computeMetrics(rawEvents) {
     .map(([date, set]) => ({ date, count: set.size }))
     .sort((a, b) => (a.date < b.date ? -1 : 1))
 
+  // ── 錯誤紀錄（最新在前）──
+  const errors = events
+    .filter((e) => e.type === 'error')
+    .map((e) => ({
+      ms: e._ms,
+      page: e.page || '(unknown)',
+      deviceId: e.deviceId || '(unknown)',
+      name: e.userName || '',
+      message: e.message || '(no message)',
+    }))
+    .sort((a, b) => b.ms - a.ms)
+    .slice(0, 100)
+
+  // ── 使用路徑漏斗：每階段「曾造訪過該頁面的不重複裝置數」（不要求嚴格順序）──
+  const visitedByStage = FUNNEL_STAGES.map(() => new Set())
+  for (const e of events) {
+    if (e.type !== 'page_view') continue
+    const idx = FUNNEL_STAGES.indexOf(e.page)
+    if (idx >= 0 && e.deviceId) visitedByStage[idx].add(e.deviceId)
+  }
+  const funnel = FUNNEL_STAGES.map((stage, i) => {
+    const count = visitedByStage[i].size
+    const prev = i === 0 ? count : visitedByStage[i - 1].size
+    const retention = prev > 0 ? (count / prev) * 100 : 0
+    return { stage, count, retention }
+  })
+
   return {
     totalEvents: events.length,
     uniqueUsers,
@@ -125,6 +164,8 @@ export function computeMetrics(rawEvents) {
     topFeatures,
     topPages,
     daily,
+    errors,
+    funnel,
   }
 }
 

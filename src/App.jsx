@@ -9,11 +9,15 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import BottomNav from './components/Layout/BottomNav'
 import EmergencyFab from './components/EmergencyFab'
 import RouteTracker from './analytics/RouteTracker'
+import { trackError } from './analytics/analytics'
 import './styles/global.css'
 
 class ErrorBoundary extends Component {
   state = { error: null }
   static getDerivedStateFromError(e) { return { error: e } }
+  componentDidCatch(error) {
+    try { trackError(error?.message || String(error)) } catch { /* ignore */ }
+  }
   render() {
     if (this.state.error) {
       return (

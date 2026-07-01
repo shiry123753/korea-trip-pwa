@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useSession } from '../hooks/useSession'
-import { track, trackSessionStart } from './analytics'
+import { track, trackSessionStart, setCurrentPage, initErrorTracking } from './analytics'
 
 const PAGE_NAMES = {
   '/': 'home',
@@ -27,12 +27,16 @@ export default function RouteTracker() {
   const hasName = !!session?.name
   const lastPage = useRef(null)
 
-  // session_start（只一次）
-  useEffect(() => { trackSessionStart() }, [])
+  // session_start（只一次）+ 全域錯誤攔截
+  useEffect(() => {
+    initErrorTracking()
+    trackSessionStart()
+  }, [])
 
   // page_view（畫面改變時）
   useEffect(() => {
     const page = resolvePage(location.pathname, hasName)
+    setCurrentPage(page)
     if (page !== lastPage.current) {
       lastPage.current = page
       track('page_view', { page })
