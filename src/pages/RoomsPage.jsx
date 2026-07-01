@@ -4,7 +4,9 @@ import styles from './RoomsPage.module.css'
 
 export default function RoomsPage() {
   const session = useSession()
-  const myRoom  = findMyRoom(session?.name ?? '')
+  // 住宿房間用「真實姓名」對應（暱稱只是顯示用，不影響房間分配）
+  const myName  = session?.realName ?? session?.name ?? ''
+  const myRoom  = findMyRoom(myName)
 
   return (
     <div className={styles.root}>
@@ -35,8 +37,8 @@ export default function RoomsPage() {
             <div className={styles.roomNote}>{myRoom.note}</div>
             <div className={styles.members}>
               {myRoom.members.map((m) => (
-                <span key={m} className={`${styles.member} ${m === session?.name ? styles.memberMe : ''}`}>
-                  {m === session?.name ? `${m} 👈` : m}
+                <span key={m} className={`${styles.member} ${m === myName ? styles.memberMe : ''}`}>
+                  {m === myName ? `${m} 👈` : m}
                 </span>
               ))}
             </div>
@@ -57,7 +59,7 @@ export default function RoomsPage() {
               </div>
               <div className={styles.members}>
                 {room.members.map((m) => (
-                  <span key={m} className={`${styles.member} ${m === session?.name ? styles.memberMe : ''}`}>
+                  <span key={m} className={`${styles.member} ${m === myName ? styles.memberMe : ''}`}>
                     {m}
                   </span>
                 ))}

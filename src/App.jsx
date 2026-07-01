@@ -1,6 +1,6 @@
 import { Component } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { useSession } from './hooks/useSession'
+import { useSession, getDisplayName } from './hooks/useSession'
 import SetupScreen from './pages/SetupScreen'
 import HomePage from './pages/HomePage'
 import ItineraryPage from './pages/ItineraryPage'
@@ -40,7 +40,7 @@ function MainApp() {
     <div className="appWrap">
       {/* 埋點：session_start / page_view / heartbeat（後台頁不會掛到） */}
       <RouteTracker />
-      {!session?.name ? (
+      {!getDisplayName(session) ? (
         <SetupScreen />
       ) : (
         <>

@@ -6,7 +6,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useSession } from '../hooks/useSession'
+import { useSession, getDisplayName } from '../hooks/useSession'
 import { track, trackSessionStart, setCurrentPage, initErrorTracking } from './analytics'
 
 const PAGE_NAMES = {
@@ -24,7 +24,7 @@ function resolvePage(pathname, hasName) {
 export default function RouteTracker() {
   const location = useLocation()
   const session = useSession()
-  const hasName = !!session?.name
+  const hasName = !!getDisplayName(session)
   const lastPage = useRef(null)
 
   // session_start（只一次）+ 全域錯誤攔截

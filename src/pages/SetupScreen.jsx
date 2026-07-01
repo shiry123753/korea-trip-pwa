@@ -10,12 +10,13 @@ const AVATARS = [
 ]
 
 export default function SetupScreen() {
-  const [name, setName]     = useState('')
-  const [avatar, setAvatar] = useState(AVATARS[0])
+  const [realName, setRealName] = useState('')
+  const [nickname, setNickname] = useState('')
+  const [avatar, setAvatar]     = useState(AVATARS[0])
 
   function handleStart() {
-    if (!name.trim()) return
-    setSession({ name: name.trim(), avatar })
+    if (!realName.trim()) return
+    setSession({ realName: realName.trim(), nickname: nickname.trim(), avatar })
   }
 
   return (
@@ -24,14 +25,23 @@ export default function SetupScreen() {
         <div className={styles.title}>釜山旅行 🇰🇷</div>
         <div className={styles.sub}>先設定一下你自己</div>
 
-        <label className={styles.label}>你的名字</label>
+        <label className={styles.label}>真實姓名（必填）</label>
         <input
           className={styles.input}
-          placeholder="輸入名字"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          placeholder="用來對應住宿房間"
+          value={realName}
+          onChange={(e) => setRealName(e.target.value)}
           maxLength={10}
           autoFocus
+        />
+
+        <label className={styles.label}>暱稱（選填）</label>
+        <input
+          className={styles.input}
+          placeholder="平常在網站上顯示用，不填就顯示真實姓名"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          maxLength={12}
         />
 
         <label className={styles.label}>選擇頭像</label>
@@ -52,7 +62,7 @@ export default function SetupScreen() {
 
         <button
           className={styles.primary}
-          disabled={!name.trim()}
+          disabled={!realName.trim()}
           onClick={handleStart}
         >
           開始旅行 ✈️
