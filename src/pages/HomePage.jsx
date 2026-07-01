@@ -4,6 +4,7 @@ import { useGpsProgress } from '../hooks/useGpsProgress'
 import { getTodayDayData, getCurrentAndNextSpot } from '../data/itinerary'
 import WeatherCard from '../components/WeatherCard'
 import SpotSheet from '../components/SpotSheet'
+import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
@@ -26,7 +27,7 @@ export default function HomePage() {
           <span className={styles.dayTag}>
             {isTripDate ? `${todayDay.label}・${todayDay.subtitle}` : '釜山旅行'}
           </span>
-          <button className={styles.profileBtn} onClick={() => setShowProfile(true)}>
+          <button className={styles.profileBtn} onClick={() => { track('feature_click', { page: 'open_profile' }); setShowProfile(true) }}>
             <img src={session?.avatar} alt="avatar" className={styles.profileImg} />
           </button>
         </div>
@@ -67,7 +68,7 @@ export default function HomePage() {
                 key={spot.id}
                 spot={spot}
                 isCurrent={spot.id === current?.id}
-                onClick={() => setSheetSpot(spot)}
+                onClick={() => { track('feature_click', { page: 'view_spot' }); setSheetSpot(spot) }}
               />
             ))}
           </div>

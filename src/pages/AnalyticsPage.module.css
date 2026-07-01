@@ -1,0 +1,172 @@
+/* 後台分析頁 — 日系雜誌風，ivory + ink，紅色點綴 */
+
+.page {
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px calc(48px + env(safe-area-inset-bottom));
+  background: #faf8f5;
+  color: #1a1410;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', sans-serif;
+  overflow-y: auto;
+}
+
+/* ── 密碼閘門 ── */
+.gate {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #e8e4df;
+}
+.gateCard {
+  width: 100%;
+  max-width: 320px;
+  background: #faf8f5;
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gateTitle { font-size: 20px; font-weight: 800; letter-spacing: 0.02em; }
+.gateSub { font-size: 13px; color: #8a7f76; margin-bottom: 8px; }
+.gateInput {
+  padding: 13px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  font-size: 16px;
+  background: #fff;
+  outline: none;
+}
+.gateInput:focus { border-color: #1a1410; }
+.gateError { font-size: 13px; color: #c0392b; }
+.gateBtn {
+  margin-top: 4px;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: #1a1410;
+  color: #faf8f5;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.title { font-size: 24px; font-weight: 800; letter-spacing: 0.02em; }
+.subtitle { font-size: 13px; color: #8a7f76; margin-top: 2px; }
+.controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5a5048; cursor: pointer; }
+.toggle input { width: 16px; height: 16px; accent-color: #c0392b; }
+.refreshBtn {
+  padding: 8px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.updatedAt { font-size: 12px; color: #a89f96; margin-bottom: 16px; }
+.errorBox {
+  background: #fbeae8;
+  color: #c0392b;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.loading { padding: 40px; text-align: center; color: #8a7f76; }
+.emptyHint {
+  background: #f1ede8;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 13px;
+  color: #5a5048;
+  margin-bottom: 20px;
+}
+
+/* ── 總覽數字卡 ── */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 16px 0 8px;
+}
+.statCard {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 18px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+.statLabel { font-size: 12px; color: #8a7f76; margin-bottom: 8px; letter-spacing: 0.02em; }
+.statValue { font-size: 26px; font-weight: 800; line-height: 1.1; }
+.statUnit { font-size: 14px; font-weight: 600; color: #8a7f76; }
+
+@media (max-width: 520px) {
+  .statGrid { grid-template-columns: 1fr; }
+  .statValue { font-size: 24px; }
+}
+
+/* ── Section ── */
+.section { margin-top: 28px; }
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1a1410;
+  display: inline-block;
+}
+
+/* ── 表格 ── */
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left;
+  font-size: 12px;
+  color: #8a7f76;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+.table td { padding: 11px 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.06); }
+.table tbody tr:last-child td { border-bottom: none; }
+.num { text-align: right; white-space: nowrap; }
+.muted { color: #a89f96; }
+
+/* ── 長條圖 ── */
+.barList { display: flex; flex-direction: column; gap: 14px; }
+.barRow { display: flex; flex-direction: column; gap: 5px; }
+.barHead { display: flex; justify-content: space-between; align-items: baseline; }
+.barLabel { font-size: 14px; font-weight: 600; }
+.barValue { font-size: 13px; font-weight: 700; color: #5a5048; }
+.barTrack { height: 10px; background: #ece7e1; border-radius: 999px; overflow: hidden; }
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, #1a1410, #4a3f36);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.barSub { font-size: 12px; color: #a89f96; }
+
+/* ── 折線圖 ── */
+.chartWrap { width: 100%; overflow-x: auto; }
+.chartSvg { width: 100%; height: auto; display: block; }
+.chartValue { fill: #1a1410; font-size: 11px; font-weight: 700; }
+.chartLabel { fill: #a89f96; font-size: 10px; }
+
+.footer { margin-top: 32px; font-size: 12px; color: #b3aaa1; text-align: center; }

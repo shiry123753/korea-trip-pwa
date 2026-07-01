@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useModalChrome } from '../hooks/useModalChrome'
 import { EMERGENCY } from '../data/emergency'
+import { track } from '../analytics/analytics'
 import styles from './EmergencyFab.module.css'
 
 export default function EmergencyFab() {
@@ -13,7 +14,11 @@ export default function EmergencyFab() {
 
   return (
     <>
-      <button className={styles.fab} onClick={() => setOpen(true)} aria-label="緊急聯絡">
+      <button
+        className={styles.fab}
+        onClick={() => { track('feature_click', { page: 'open_emergency' }); setOpen(true) }}
+        aria-label="緊急聯絡"
+      >
         🆘
       </button>
 

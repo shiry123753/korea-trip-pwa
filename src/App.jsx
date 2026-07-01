@@ -5,8 +5,10 @@ import SetupScreen from './pages/SetupScreen'
 import HomePage from './pages/HomePage'
 import ItineraryPage from './pages/ItineraryPage'
 import RoomsPage from './pages/RoomsPage'
+import AnalyticsPage from './pages/AnalyticsPage'
 import BottomNav from './components/Layout/BottomNav'
 import EmergencyFab from './components/EmergencyFab'
+import RouteTracker from './analytics/RouteTracker'
 import './styles/global.css'
 
 class ErrorBoundary extends Component {
@@ -27,20 +29,27 @@ class ErrorBoundary extends Component {
   }
 }
 
-function Inner() {
+function MainApp() {
   const session = useSession()
-  if (!session?.name) return <SetupScreen />
 
   return (
-    <>
-      <Routes>
-        <Route path="/"          element={<HomePage />} />
-        <Route path="/itinerary" element={<ItineraryPage />} />
-        <Route path="/rooms"     element={<RoomsPage />} />
-      </Routes>
-      <BottomNav />
-      <EmergencyFab />
-    </>
+    <div className="appWrap">
+      {/* 埋點：session_start / page_view / heartbeat（後台頁不會掛到） */}
+      <RouteTracker />
+      {!session?.name ? (
+        <SetupScreen />
+      ) : (
+        <>
+          <Routes>
+            <Route path="/"          element={<HomePage />} />
+            <Route path="/itinerary" element={<ItineraryPage />} />
+            <Route path="/rooms"     element={<RoomsPage />} />
+          </Routes>
+          <BottomNav />
+          <EmergencyFab />
+        </>
+      )}
+    </div>
   )
 }
 
@@ -48,9 +57,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <div className="appWrap">
-          <Inner />
-        </div>
+        <Routes>
+          {/* 隱藏後台：獨立於 onboarding 與手機版型之外 */}
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/*" element={<MainApp />} />
+        </Routes>
       </ErrorBoundary>
     </BrowserRouter>
   )

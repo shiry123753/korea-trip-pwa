@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from 'react'
 import { useModalChrome } from '../hooks/useModalChrome'
 import { buildNavLink } from '../utils/mapsLinks'
+import { track } from '../analytics/analytics'
 import styles from './SpotSheet.module.css'
 
 export default function SpotSheet({ spot, onClose }) {
@@ -23,6 +24,7 @@ export default function SpotSheet({ spot, onClose }) {
   }, [open, onClose])
 
   async function handleFindFood() {
+    track('feature_click', { page: 'find_restaurant' })
     setFoodLoading(true)
     try {
       await new Promise((resolve, reject) =>
@@ -63,6 +65,7 @@ export default function SpotSheet({ spot, onClose }) {
               href={buildNavLink(spot.address)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track('feature_click', { page: 'open_navigation' })}
             >
               🗺 導航過來
             </a>
@@ -84,6 +87,7 @@ export default function SpotSheet({ spot, onClose }) {
               href={buildNavLink(spot.address)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track('feature_click', { page: 'open_navigation' })}
             >
               🏨 導航回飯店
             </a>
