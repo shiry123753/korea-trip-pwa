@@ -1,0 +1,34 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', sans-serif;
+  background: #e8e4df;
+  color: #1a1410;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.appWrap {
+  width: 100%;
+  max-width: 480px;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background: #faf8f5;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.15);
+}
+
+button { font-family: inherit; cursor: pointer; }
+select, input { font-family: inherit; }
+a { color: inherit; text-decoration: none; }

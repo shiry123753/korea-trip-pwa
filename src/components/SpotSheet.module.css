@@ -1,0 +1,155 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.22s ease;
+}
+
+@keyframes fadeIn {
+  from { background: rgba(0, 0, 0, 0); }
+  to   { background: rgba(0, 0, 0, 0.45); }
+}
+
+.sheet {
+  background: #faf8f5;
+  border-radius: 24px 24px 0 0;
+  padding: 0 0 calc(32px + env(safe-area-inset-bottom));
+  max-height: 82dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  margin: 12px auto 0;
+}
+
+.header {
+  padding: 16px 24px 0;
+}
+
+.emoji {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a1410;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #4a4640;
+  font-weight: 500;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 16px 24px;
+}
+
+.desc {
+  padding: 0 24px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #4a4640;
+}
+
+.note {
+  padding: 12px 24px 0;
+  font-size: 13px;
+  color: #8a7f76;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  padding: 20px 24px 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1 1 auto;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 50px;
+}
+
+.btn:active { transform: scale(0.96); }
+
+.btnPrimary {
+  background: #1a1410;
+  color: #faf8f5;
+}
+
+.btnSecondary {
+  background: rgba(0, 0, 0, 0.07);
+  color: #1a1410;
+}
+
+.btnDisabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1a1410;
+}
