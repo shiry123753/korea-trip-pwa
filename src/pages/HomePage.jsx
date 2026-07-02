@@ -1,4 +1,4 @@
-ㄋimport { useState } from 'react'
+import { useState } from 'react'
 import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
 import { useGpsProgress } from '../hooks/useGpsProgress'
 import { getTodayDayData, getCurrentAndNextSpot } from '../data/itinerary'
