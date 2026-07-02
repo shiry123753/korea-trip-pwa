@@ -19,6 +19,10 @@ export const DAYS = [
         address: '台灣桃園國際機場第一航廈',
         timeSlot: '12:00',
         durationMin: 0,
+        // 🚌 巴士進度時間表（選填）：這段移動的「出發時間」與「行駛分鐘」。
+        //    不填的話，系統會自動用「本站 timeSlot + durationMin」當出發、下一站 timeSlot 當抵達。
+        departAt: '14:45',
+        travelMin: 190,
         note: 'JX 902｜14:45 起飛，17:55 抵達金海國際機場',
         desc: '星宇航空 3 號櫃台集合，請準時到達。',
         isTransit: true,
@@ -30,6 +34,8 @@ export const DAYS = [
         address: '부산 강서구 공항진입로 108',
         timeSlot: '17:55',
         durationMin: 60,
+        departAt: '18:55',
+        travelMin: 65,
         note: '入境、領行李、接駁巴士前往飯店',
         desc: '入境後領取行李，集合後統一搭接駁巴士前往飯店。',
         isTransit: true,
@@ -256,8 +262,10 @@ export const DAYS = [
 
 // ── helpers ──────────────────────────────────────────────────
 
-export function getTodayDayData() {
-  const today = localDateString()
+// overrideDate（選填，格式 'YYYY-MM-DD'）：用於「日期預覽」模式，假裝今天是某一天。
+// 不傳時 = 依真實今天日期，行為與原本完全相同。
+export function getTodayDayData(overrideDate) {
+  const today = overrideDate || localDateString()
   return DAYS.find((d) => d.date === today) ?? null
 }
 

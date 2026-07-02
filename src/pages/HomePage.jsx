@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
-import { useGpsProgress } from '../hooks/useGpsProgress'
-import { getTodayDayData, getCurrentAndNextSpot } from '../data/itinerary'
+// 第二階段（真實 GPS）再啟用： import { useGpsProgress } from '../hooks/useGpsProgress'
+import { getTodayDayData, DAYS } from '../data/itinerary'
+import { useScheduleProgress, getDayLegs } from '../hooks/useScheduleProgress'
 import WeatherCard from '../components/WeatherCard'
 import SpotSheet from '../components/SpotSheet'
+import PushOptIn from '../components/PushOptIn'
 import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
 
@@ -12,15 +14,95 @@ export default function HomePage() {
   const [sheetSpot, setSheetSpot] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
 
-  const todayDay = getTodayDayData()
-  const { current, next } = getCurrentAndNextSpot(todayDay)
+  // 隱藏「日期預覽」：只有網址帶 ?preview=1 才出現，團員看不到，也不會寫入任何資料
+  const previewOn = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('preview') === '1'
+  const [previewDate, setPreviewDate] = useState(null) // null = 真實今天
+  const [previewMin, setPreviewMin]   = useState(null) // 預覽用「模擬時間」（當日分鐘）；null = 用真實時間
 
-  const gps = useGpsProgress(next ?? null)
+  const todayDay = getTodayDayData(previewDate)
+
+  // 進度來源（第一階段：時間表推算，零成本、不需定位）。
+  // 預覽時用模擬時間覆蓋「現在幾點」；第二階段可在這層之上用真實 GPS 覆蓋。
+  const simulating = previewOn && !!previewDate && previewMin != null
+  const prog = useScheduleProgress(todayDay, simulating ? previewMin : undefined)
 
   const isTripDate = !!todayDay
+  const spots = todayDay?.spots ?? []
+  // 目前聚焦的景點（給 Hero 副標）
+  const currentSpot = prog.phase === 'moving'
+    ? prog.destSpot
+    : (prog.atSpotIndex >= 0 ? spots[prog.atSpotIndex] : null)
 
   return (
     <div className={styles.root}>
+      {/* ── 隱藏日期預覽切換器（僅 ?preview=1 顯示，團員看不到）── */}
+      {previewOn && (
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 500,
+          display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center',
+          padding: '8px 12px', background: '#1a1410',
+          paddingTop: 'calc(8px + env(safe-area-inset-top))',
+        }}>
+          <span style={{ color: '#faf8f5', fontSize: 12, fontWeight: 800, marginRight: 2 }}>預覽</span>
+          {DAYS.map((d) => {
+            const md = `${Number(d.date.slice(5, 7))}/${Number(d.date.slice(8, 10))}`
+            const active = previewDate === d.date
+            return (
+              <button
+                key={d.id}
+                onClick={() => {
+                  setPreviewDate(d.date)
+                  // 預設把模擬時間放到「第一段路程的中間」，一選日期就直接看到巴士在路上
+                  const legs = getDayLegs(d)
+                  setPreviewMin(legs.length ? Math.round(legs[0].depart + legs[0].travel / 2) : null)
+                }}
+                style={{
+                  padding: '5px 11px', borderRadius: 999,
+                  border: '1px solid rgba(255,255,255,0.35)',
+                  background: active ? '#faf8f5' : 'transparent',
+                  color: active ? '#1a1410' : '#faf8f5',
+                  fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+                }}
+              >
+                {md}
+              </button>
+            )
+          })}
+          <button
+            onClick={() => { setPreviewDate(null); setPreviewMin(null) }}
+            style={{
+              padding: '5px 11px', borderRadius: 999,
+              border: '1px solid rgba(255,255,255,0.35)',
+              background: previewDate === null ? '#faf8f5' : 'transparent',
+              color: previewDate === null ? '#1a1410' : '#faf8f5',
+              fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+            }}
+          >
+            今天
+          </button>
+
+          {/* 模擬時間滑桿：拖曳即可看巴士沿著時間表往前跑 */}
+          {simulating && (() => {
+            const legs = getDayLegs(todayDay)
+            const lo = legs.length ? legs[0].depart : 0
+            const hi = legs.length ? legs[legs.length - 1].arrive : 1439
+            return (
+              <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                <span style={{ color: '#faf8f5', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>
+                  模擬 {minToHHMM(previewMin)}
+                </span>
+                <input
+                  type="range" min={lo} max={hi} step={1} value={previewMin}
+                  onChange={(e) => setPreviewMin(Number(e.target.value))}
+                  style={{ flex: 1, accentColor: '#c0392b' }}
+                />
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
       {/* ── Hero ── */}
       <div className={styles.hero}>
         <div className={styles.heroTop}>
@@ -35,10 +117,14 @@ export default function HomePage() {
           <span className={styles.heroLine}>嘉義有個阿里山</span>
           <span className={styles.heroLine}>全家一起去釜山</span>
         </div>
-        {isTripDate && current && (
-          <div className={styles.heroSub}>目前：{current.emoji} {current.name}</div>
+        {isTripDate && (prog.phase === 'moving'
+          ? <div className={styles.heroSub}>🚌 移動中 → {prog.destSpot?.name}</div>
+          : currentSpot && <div className={styles.heroSub}>目前：{currentSpot.emoji} {currentSpot.name}</div>
         )}
       </div>
+
+      {/* 推播授權（功能一）：放明顯處，第一次打開就看得到 */}
+      <PushOptIn />
 
       {!isTripDate ? (
         <div className={styles.noTrip}>
@@ -47,13 +133,8 @@ export default function HomePage() {
         </div>
       ) : (
         <>
-          {/* ── GPS 移動進度 ── */}
-          {next && (
-            <div className={styles.section}>
-              <div className={styles.sectionLabel}>前往下一站</div>
-              <GpsProgressCard gps={gps} current={current} next={next} />
-            </div>
-          )}
+          {/* 第二階段（真實 GPS「前往下一站」卡片）暫時停用，改由下方巴士時間軸顯示，
+              避免第一階段就要求定位授權。程式碼保留在檔案下方 GpsProgressCard，之後可再啟用。 */}
 
           {/* ── 天氣 ── */}
           <div className={styles.section}>
@@ -61,17 +142,68 @@ export default function HomePage() {
             <WeatherCard />
           </div>
 
-          {/* ── 今日景點列表 ── */}
+          {/* ── 今日景點列表（左側巴士時間軸，依時間表自動推進）── */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>今日行程</div>
-            {todayDay.spots.map((spot) => (
-              <SpotRow
-                key={spot.id}
-                spot={spot}
-                isCurrent={spot.id === current?.id}
-                onClick={() => { track('feature_click', { page: 'view_spot' }); setSheetSpot(spot) }}
-              />
-            ))}
+            <div className={styles.timeline}>
+              {spots.map((spot, i) => {
+                const isLast   = i === spots.length - 1
+                const moving   = prog.phase === 'moving'
+                const isActive = moving && i === prog.movingLegIndex   // 正在走的這一段（第 i → i+1）
+
+                // 這一段（第 i 站 → 第 i+1 站）的填充比例
+                let legPct = 0
+                if (moving) {
+                  legPct = i < prog.movingLegIndex ? 100
+                    : i === prog.movingLegIndex ? Math.round(prog.legProgress * 100) : 0
+                } else {
+                  legPct = i < prog.atSpotIndex ? 100 : 0
+                }
+
+                // 節點狀態：已過=實心、目前停留=脈動、未到=空心
+                let nodeCls = ''
+                if (moving) {
+                  nodeCls = i <= prog.movingLegIndex ? styles.nodeDone : ''
+                } else if (prog.phase === 'done') {
+                  nodeCls = styles.nodeDone
+                } else {
+                  nodeCls = i < prog.atSpotIndex ? styles.nodeDone
+                    : i === prog.atSpotIndex ? styles.nodeCurrent : ''
+                }
+
+                // 這一列要不要顯示狀態小字（剩餘時間 / 已抵達…）
+                const showStatus = moving ? i === prog.movingLegIndex : i === prog.atSpotIndex
+
+                return (
+                  <div key={spot.id} className={`${styles.tlRow}${isActive ? ` ${styles.tlRowActive}` : ''}`}>
+                    <div className={styles.rail}>
+                      {!isLast && (
+                        <div className={`${styles.legTrack}${isActive ? ` ${styles.legTrackActive}` : ''}`}>
+                          <div className={styles.legFill} style={{ height: `${legPct}%` }} />
+                          {isActive && (
+                            <img
+                              src="/IMG_6315.jpg"
+                              alt="巴士"
+                              className={styles.bus}
+                              style={{ top: `${legPct}%` }}
+                            />
+                          )}
+                        </div>
+                      )}
+                      <div className={`${styles.node} ${nodeCls}`} />
+                    </div>
+                    <div className={styles.tlRight}>
+                      <SpotRow
+                        spot={spot}
+                        isCurrent={showStatus}
+                        onClick={() => { track('feature_click', { page: 'view_spot' }); setSheetSpot(spot) }}
+                      />
+                      {showStatus && <StatusLine prog={prog} spot={spot} />}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </>
       )}
@@ -85,6 +217,29 @@ export default function HomePage() {
       )}
     </div>
   )
+}
+
+/* 分鐘 → HH:MM（預覽模擬時間顯示用） */
+function minToHHMM(min) {
+  const m = ((Math.round(min) % 1440) + 1440) % 1440
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+}
+
+/* ── 時間軸上「目前狀態」小字（剩餘時間 / 已抵達 / 尚未出發…）── */
+function StatusLine({ prog, spot }) {
+  let text
+  if (prog.phase === 'moving') {
+    text = prog.remainingMin > 0
+      ? `🚌 預計還有 ${prog.remainingMin} 分鐘抵達 ${prog.destSpot?.name ?? ''}`
+      : `🚌 即將抵達 ${prog.destSpot?.name ?? ''}`
+  } else if (prog.phase === 'before') {
+    text = '🕐 尚未出發'
+  } else if (prog.phase === 'done') {
+    text = '🏁 今日行程結束'
+  } else {
+    text = `✅ 已抵達 ${spot?.name ?? ''}`
+  }
+  return <div className={styles.legInfo}>{text}</div>
 }
 
 /* ── GPS 進度卡片 ─────────────────────── */
