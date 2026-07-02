@@ -1,29 +1,23 @@
 import { useState, useEffect } from 'react'
 import {
-  enablePush, isPushSupported, getNotificationPermission,
-  isIosNeedingHomeScreen, initForegroundPush, getStoredToken,
+  enablePush, getNotificationPermission, pushCapability,
+  initForegroundPush, getStoredToken,
 } from '../push/push'
 import styles from './PushOptIn.module.css'
 
 export default function PushOptIn() {
-  const [supported, setSupported] = useState(null) // null=檢查中
-  const [iosHint, setIosHint] = useState(false)
-  const [registered, setRegistered] = useState(false) // 是否已成功寫進 Firestore
+  const [cap, setCap] = useState(null) // null = 尚未判斷
+  const [registered, setRegistered] = useState(false)
   const [token, setToken] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
-    let alive = true
-    isPushSupported().then((ok) => {
-      if (!alive) return
-      setSupported(ok)
-      setIosHint(isIosNeedingHomeScreen())
-      const t = getStoredToken()
-      if (t) { setToken(t); setRegistered(true) }
-      if (ok && getNotificationPermission() === 'granted') initForegroundPush()
-    })
-    return () => { alive = false }
+    const c = pushCapability()
+    setCap(c)
+    const t = getStoredToken()
+    if (t) { setToken(t); setRegistered(true) }
+    if (c.basicOk && getNotificationPermission() === 'granted') initForegroundPush()
   }, [])
 
   async function handleEnable() {
@@ -41,30 +35,13 @@ export default function PushOptIn() {
     }
   }
 
-  if (supported === null) return null
-  if (!supported && !iosHint) return null
+  if (cap === null) return null
 
-  // iPhone 尚未加入主畫面：只能給說明，無法在此授權
-  if (iosHint && !registered) {
-    return (
-      <div className={styles.card}>
-        <div className={styles.head}>
-          <span className={styles.icon}>🔔</span>
-          <div className={styles.title}>開啟行程提醒通知</div>
-        </div>
-        <div className={styles.iosHint}>
-          📱 iPhone 請先用 Safari 點「<b>分享</b> → <b>加入主畫面</b>」，
-          再從主畫面圖示打開這個 App，才能開啟通知。
-        </div>
-      </div>
-    )
-  }
-
-  // 已成功註冊：綠色狀態 + 顯示 token 供你複製去 Console 測試
+  // 已成功註冊：綠色狀態 + 顯示 token 供測試
   if (registered) {
     return (
       <div className={styles.card}>
-        <div className={`${styles.doneRow}`}>
+        <div className={styles.doneRow}>
           <span className={styles.icon}>🔔</span>
           <div className={styles.doneText}>已開啟並註冊此裝置</div>
         </div>
@@ -81,23 +58,59 @@ export default function PushOptIn() {
     )
   }
 
-  // 尚未註冊（含「通知已授權但 token 沒寫進去」的情況）
-  return (
-    <div className={styles.card}>
-      <div className={styles.head}>
-        <span className={styles.icon}>🔔</span>
-        <div className={styles.title}>開啟行程提醒通知</div>
-      </div>
-      <div className={styles.desc}>開啟後可收到集合提醒、明日行程與天氣通知。</div>
-      <button className={styles.btn} onClick={handleEnable} disabled={busy}>
-        {busy ? '處理中…' : '開啟通知並註冊此裝置'}
-      </button>
-      {getNotificationPermission() === 'denied' && (
-        <div className={styles.deniedHint}>
-          目前是「封鎖」狀態。請到瀏覽器網站設定把「通知」改成允許，再試一次。
+  // iPhone 尚未加入主畫面：給引導（Safari 分頁無法授權）
+  if (cap.isIos && !cap.standalone) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.head}>
+          <span className={styles.icon}>🔔</span>
+          <div className={styles.title}>開啟行程提醒通知</div>
         </div>
-      )}
-      {msg && <div className={styles.msg}>{msg}</div>}
-    </div>
-  )
+        <div className={styles.iosHint}>
+          📱 iPhone 請先用 Safari 點「<b>分享</b> → <b>加入主畫面</b>」，
+          再從主畫面圖示打開這個 App，才能開啟通知。
+        </div>
+      </div>
+    )
+  }
+
+  // iPhone 已是 standalone 但系統太舊（沒有 PushManager = iOS < 16.4）
+  if (cap.isIos && cap.standalone && !cap.basicOk) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.head}>
+          <span className={styles.icon}>🔔</span>
+          <div className={styles.title}>開啟行程提醒通知</div>
+        </div>
+        <div className={styles.iosHint}>
+          你的 iPhone 需要 <b>iOS 16.4 以上</b> 才支援網頁通知。請更新系統後，再從主畫面圖示開啟。
+        </div>
+      </div>
+    )
+  }
+
+  // 支援 → 顯示授權按鈕
+  if (cap.basicOk) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.head}>
+          <span className={styles.icon}>🔔</span>
+          <div className={styles.title}>開啟行程提醒通知</div>
+        </div>
+        <div className={styles.desc}>開啟後可收到集合提醒、明日行程與天氣通知。</div>
+        <button className={styles.btn} onClick={handleEnable} disabled={busy}>
+          {busy ? '處理中…' : '開啟通知並註冊此裝置'}
+        </button>
+        {getNotificationPermission() === 'denied' && (
+          <div className={styles.deniedHint}>
+            目前是「封鎖」狀態。請到瀏覽器網站設定把「通知」改成允許，再試一次。
+          </div>
+        )}
+        {msg && <div className={styles.msg}>{msg}</div>}
+      </div>
+    )
+  }
+
+  // 其他（桌機瀏覽器不支援通知）→ 不佔版面
+  return null
 }

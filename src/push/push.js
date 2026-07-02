@@ -26,11 +26,21 @@ export function getNotificationPermission() {
 
 // iPhone 判斷：iOS 且尚未「加到主畫面」時，Safari 無法授權通知
 export function isIosNeedingHomeScreen() {
-  const ua = navigator.userAgent || ''
+  const c = pushCapability()
+  return c.isIos && !c.standalone
+}
+
+// 自行判斷推播能力（比 firebase 的 isSupported 更寬鬆、同步、可控）
+export function pushCapability() {
+  const ua = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : ''
   const isIos = /iPhone|iPad|iPod/.test(ua)
-  const standalone = window.navigator.standalone === true
-    || window.matchMedia?.('(display-mode: standalone)').matches
-  return isIos && !standalone
+  const standalone =
+    (typeof navigator !== 'undefined' && navigator.standalone === true) ||
+    (typeof window !== 'undefined' && !!window.matchMedia?.('(display-mode: standalone)').matches)
+  const hasNotif = typeof Notification !== 'undefined'
+  const hasSW = typeof navigator !== 'undefined' && 'serviceWorker' in navigator
+  const hasPush = typeof window !== 'undefined' && 'PushManager' in window
+  return { isIos, standalone, hasNotif, hasSW, hasPush, basicOk: hasNotif && hasSW && hasPush }
 }
 
 // 點「開啟通知」時呼叫：要求授權 → 取得 token → 存 Firestore
@@ -41,7 +51,9 @@ export async function enablePush() {
   if (isIosNeedingHomeScreen()) {
     throw new Error('iPhone 請先用 Safari「分享 → 加入主畫面」，再從主畫面圖示開啟並開通知')
   }
-  if (!(await isPushSupported())) {
+  const cap = pushCapability()
+  if (!cap.basicOk) {
+    if (cap.isIos) throw new Error('你的 iPhone 需要 iOS 16.4 以上才支援網頁通知，請更新系統後再試')
     throw new Error('這個裝置或瀏覽器不支援推播通知')
   }
 
@@ -92,15 +104,17 @@ export function getStoredToken() {
 let foregroundInit = false
 export async function initForegroundPush() {
   if (foregroundInit) return
-  if (!(await isPushSupported())) return
+  if (!pushCapability().basicOk) return
   if (getNotificationPermission() !== 'granted') return
-  foregroundInit = true
-  const messaging = getMessaging(app)
-  onMessage(messaging, (payload) => {
-    const title = payload?.notification?.title || '釜山之旅'
-    const body = payload?.notification?.body || ''
-    try {
-      new Notification(title, { body, icon: '/icons/icon-192.png' })
-    } catch { /* 忽略 */ }
-  })
+  try {
+    const messaging = getMessaging(app)
+    onMessage(messaging, (payload) => {
+      const title = payload?.notification?.title || '釜山之旅'
+      const body = payload?.notification?.body || ''
+      try {
+        new Notification(title, { body, icon: '/icons/icon-192.png' })
+      } catch { /* 忽略 */ }
+    })
+    foregroundInit = true
+  } catch { /* iOS 前景可能不支援，背景 SW 仍會顯示 */ }
 }
