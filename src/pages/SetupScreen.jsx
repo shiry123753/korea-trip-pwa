@@ -28,7 +28,7 @@ export default function SetupScreen() {
         <label className={styles.label}>真實姓名（必填）</label>
         <input
           className={styles.input}
-          placeholder="用來對應住宿房間"
+          placeholder="請輸入姓名"
           value={realName}
           onChange={(e) => setRealName(e.target.value)}
           maxLength={10}
@@ -38,7 +38,7 @@ export default function SetupScreen() {
         <label className={styles.label}>暱稱（選填）</label>
         <input
           className={styles.input}
-          placeholder="平常在網站上顯示用，不填就顯示真實姓名"
+          placeholder="請輸入暱稱"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           maxLength={12}
