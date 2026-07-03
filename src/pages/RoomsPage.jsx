@@ -1,5 +1,6 @@
 import { useSession } from '../hooks/useSession'
 import { ROOMS, HOTELS, findMyRoom } from '../data/rooms'
+import { useRoomNumbers } from '../hooks/useRoomNumbers'
 import styles from './RoomsPage.module.css'
 
 export default function RoomsPage() {
@@ -7,6 +8,7 @@ export default function RoomsPage() {
   // 住宿房間用「真實姓名」對應（暱稱只是顯示用，不影響房間分配）
   const myName  = session?.realName ?? session?.name ?? ''
   const myRoom  = findMyRoom(myName)
+  const roomNums = useRoomNumbers() // { 'room-A': '301', ... } | {} | null
 
   return (
     <div className={styles.root}>
@@ -33,7 +35,11 @@ export default function RoomsPage() {
         <div className={styles.section}>
           <div className={styles.sectionLabel}>我的房間</div>
           <div className={`${styles.roomCard} ${styles.myRoom}`}>
-            <div className={styles.roomLabel}>{myRoom.label}</div>
+            <span className={styles.myBadge}>★ 你住這間</span>
+            <div className={styles.roomLabel}>
+              {myRoom.label}
+              {roomNums?.[myRoom.id] && <span className={styles.roomNum}>房號 {roomNums[myRoom.id]}</span>}
+            </div>
             <div className={styles.roomNote}>{myRoom.note}</div>
             <div className={styles.members}>
               {myRoom.members.map((m) => (
@@ -51,10 +57,15 @@ export default function RoomsPage() {
         <div className={styles.sectionLabel}>全部房間</div>
         {ROOMS.map((room) => {
           const isMyRoom = room.id === myRoom?.id
+          const num = roomNums?.[room.id]
           return (
             <div key={room.id} className={`${styles.roomCard}${isMyRoom ? ` ${styles.myRoom}` : ''}`}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className={styles.roomLabel}>{room.label}</div>
+              {isMyRoom && <span className={styles.myBadge}>★ 你住這間</span>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <div className={styles.roomLabel}>
+                  {room.label}
+                  {num && <span className={styles.roomNum}>房號 {num}</span>}
+                </div>
                 <div className={styles.roomNote}>{room.note}</div>
               </div>
               <div className={styles.members}>

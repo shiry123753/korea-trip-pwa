@@ -204,7 +204,7 @@ export default function HomePage() {
                               <BusIcon
                                 size={40}
                                 tip={prog.remainingMin != null
-                                  ? `還有 ${prog.remainingMin} 分抵達 ${prog.destSpot?.name ?? ''}`
+                                  ? `還有 ${fmtMinutes(prog.remainingMin)}抵達 ${prog.destSpot?.name ?? ''}`
                                   : undefined}
                               />
                             </div>
@@ -246,12 +246,21 @@ function minToHHMM(min) {
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
 }
 
+/* 分鐘 → 「X 小時 X 分鐘」；60 分鐘以內只顯示「X 分鐘」 */
+function fmtMinutes(min) {
+  if (min == null) return ''
+  const m = Math.max(0, Math.round(min))
+  if (m < 60) return `${m} 分鐘`
+  const h = Math.floor(m / 60), r = m % 60
+  return r === 0 ? `${h} 小時` : `${h} 小時 ${r} 分鐘`
+}
+
 /* ── 時間軸上「目前狀態」小字（剩餘時間 / 已抵達 / 尚未出發…）── */
 function StatusLine({ prog, spot }) {
   let text
   if (prog.phase === 'moving') {
     text = prog.remainingMin > 0
-      ? `🚌 預計還有 ${prog.remainingMin} 分鐘抵達 ${prog.destSpot?.name ?? ''}`
+      ? `🚌 預計還有 ${fmtMinutes(prog.remainingMin)}抵達 ${prog.destSpot?.name ?? ''}`
       : `🚌 即將抵達 ${prog.destSpot?.name ?? ''}`
   } else if (prog.phase === 'before') {
     text = '🕐 尚未出發'

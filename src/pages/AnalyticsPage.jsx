@@ -11,6 +11,7 @@ import { computeMetrics, fmtDuration, fmtDateTime } from '../analytics/metrics'
 import { formatDeviceInfo } from '../analytics/deviceInfo'
 import PushSender from '../components/PushSender'
 import MeetingEditor from '../components/MeetingEditor'
+import RoomNumberEditor from '../components/RoomNumberEditor'
 import styles from './AnalyticsPage.module.css'
 
 const PASSWORD = import.meta.env.VITE_ANALYTICS_PASSWORD
@@ -184,9 +185,10 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* 發送推播 + 集合時間設定（功能一/二/三） */}
+      {/* 發送推播 + 集合時間 + 房號登錄 */}
       <PushSender />
       <MeetingEditor />
+      <RoomNumberEditor />
 
       <div className={styles.rangeBar}>
         {RANGE_OPTS.map((r) => (
