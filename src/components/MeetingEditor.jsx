@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useMeetingInfo, saveMeetingInfo, meetingReminderText } from '../hooks/useMeetingInfo'
 import { sendPush, formatSendResult } from '../data/pushClient'
+import { ymdLocal, mdLabel } from '../data/dateUtil'
 import styles from './Backend.module.css'
 
 function hmToMin(hm) {
@@ -8,9 +9,10 @@ function hmToMin(hm) {
   return m ? Number(m[1]) * 60 + Number(m[2]) : null
 }
 
-// 後台：設定/修改今日集合時間，並提供倒數 + 一鍵發送集合提醒（方案二）
+// 後台：設定集合日期/時間/地點，並提供倒數 + 一鍵發送集合提醒（方案二）
 export default function MeetingEditor() {
   const info = useMeetingInfo()
+  const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [place, setPlace] = useState('')
   const [busy, setBusy] = useState(false)
@@ -21,10 +23,13 @@ export default function MeetingEditor() {
   const [sendMsg, setSendMsg] = useState('')
 
   useEffect(() => {
-    if (info) { setTime(info.time || ''); setPlace(info.place || '') }
-  }, [info?.time, info?.place])
+    if (info) {
+      setDate(info.date || ymdLocal())
+      setTime(info.time || '')
+      setPlace(info.place || '')
+    }
+  }, [info?.date, info?.time, info?.place])
 
-  // 每 15 秒更新一次倒數（用現場裝置的當地時間，到韓國會自動是韓國時間）
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 15000)
     return () => clearInterval(id)
@@ -33,7 +38,7 @@ export default function MeetingEditor() {
   async function save() {
     setBusy(true); setMsg('')
     try {
-      await saveMeetingInfo({ time, place })
+      await saveMeetingInfo({ date, time, place })
       setMsg('✅ 已儲存，團員今日頁會即時更新')
     } catch (e) {
       setMsg(`⚠️ ${e.message || '儲存失敗'}`)
@@ -49,27 +54,31 @@ export default function MeetingEditor() {
     setSending(false)
   }
 
-  // 倒數計算（依已儲存的集合時間）
+  // 倒數：只有「集合日期 = 今天」才即時倒數；未來日期顯示靜態提示
+  const realToday = ymdLocal(now)
   const meetMin = hmToMin(info?.time)
   const nowMin = now.getHours() * 60 + now.getMinutes()
-  const diff = meetMin != null ? meetMin - nowMin : null
   const hasMeeting = !!(info && info.time)
-
   let countdown = null
   if (hasMeeting) {
-    if (diff > 0) {
-      countdown = { text: `還有 ${diff} 分鐘到集合時間（${info.time}${info.place ? ` · ${info.place}` : ''}）`, hot: diff <= 15 }
-    } else if (diff > -90) {
-      countdown = { text: `⏰ 集合時間到了！（${info.time}${info.place ? ` · ${info.place}` : ''}）`, hot: true }
-    } else {
+    const md = info.date ? info.date : realToday
+    if (md > realToday) {
+      countdown = { text: `集合設定於 ${mdLabel(info.date)} ${info.time}${info.place ? ` · ${info.place}` : ''}（當天再倒數）`, hot: false }
+    } else if (md < realToday) {
       countdown = { text: `集合時間：${info.time}${info.place ? ` · ${info.place}` : ''}`, hot: false }
+    } else {
+      const diff = meetMin - nowMin
+      if (diff > 0) countdown = { text: `還有 ${diff} 分鐘到集合時間（${info.time}${info.place ? ` · ${info.place}` : ''}）`, hot: diff <= 15 }
+      else if (diff > -90) countdown = { text: `⏰ 集合時間到了！（${info.time}${info.place ? ` · ${info.place}` : ''}）`, hot: true }
+      else countdown = { text: `集合時間：${info.time}${info.place ? ` · ${info.place}` : ''}`, hot: false }
     }
   }
 
   return (
     <section className={styles.section}>
-      <div className={styles.secTitle}>今日集合時間</div>
+      <div className={styles.secTitle}>集合時間設定</div>
       <div className={styles.row}>
+        <input className={styles.input} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <input className={styles.input} placeholder="08:30" value={time} onChange={(e) => setTime(e.target.value)} />
         <input className={styles.input} placeholder="大廳集合" value={place} onChange={(e) => setPlace(e.target.value)} />
       </div>
@@ -77,6 +86,7 @@ export default function MeetingEditor() {
         {busy ? '儲存中…' : '儲存集合時間'}
       </button>
       {msg && <div className={styles.msg}>{msg}</div>}
+      <div className={styles.hint}>集合日期填哪天，團員前一天就會看到「明日集合時間」，當天自動變「今日集合時間」。</div>
 
       {hasMeeting && (
         <div className={styles.countdownBox}>

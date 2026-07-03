@@ -18,10 +18,10 @@ export function useMeetingInfo() {
   return info
 }
 
-export async function saveMeetingInfo({ time, place }) {
+export async function saveMeetingInfo({ time, place, date }) {
   await setDoc(
     ref(),
-    { time: time || '', place: place || '', updatedAt: serverTimestamp() },
+    { time: time || '', place: place || '', date: date || '', updatedAt: serverTimestamp() },
     { merge: true },
   )
 }
