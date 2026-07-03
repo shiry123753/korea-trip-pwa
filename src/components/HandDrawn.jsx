@@ -84,8 +84,8 @@ export function PlaneIcon({ mode = 'takeoff', size = 42 }) {
       <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
         {/* 動態虛線尾流 + 雲朵 */}
         <line className={styles.dash} x1="3" y1="26" x2="16" y2="26" stroke={MIST} strokeWidth="2.4" strokeLinecap="round" strokeDasharray="4 5" />
-        <ellipse className={styles.cloudA} cx="12" cy="16" rx="5" ry="3" fill={CLOUD} />
-        <ellipse className={styles.cloudB} cx="15" cy="34" rx="4" ry="2.5" fill={CLOUD} />
+        <ellipse className={styles.cloudA} cx="12" cy="16" rx="5" ry="3" fill={CREAM} />
+        <ellipse className={styles.cloudB} cx="15" cy="34" rx="4" ry="2.5" fill={CREAM} />
         <g className={styles.floaty}>
           <g transform={`rotate(${rot} 28 25)`}>
             <path d="M20 25 L14 34 L30 26 Z" fill={GREEN2} />
