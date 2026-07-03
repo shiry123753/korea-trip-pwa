@@ -1,15 +1,15 @@
 export const ROOMS = [
-  { id: 'room-A', label: 'A 房', members: ['蘇郁淳', '陳幸君'], note: '2 人房' },
-  { id: 'room-B', label: 'B 房', members: ['陳億', '曾怡璁'], note: '2 人房' },
-  { id: 'room-C', label: 'C 房', members: ['陳騏伊', '陳心唯', '陳可甯'], note: '3 人房' },
-  { id: 'room-D', label: 'D 房', members: ['陳王素清', '陳玫峰'], note: '2 人房' },
-  { id: 'room-E', label: 'E 房', members: ['陳香君', '陳美如'], note: '2 人房' },
-  { id: 'room-F', label: 'F 房', members: ['曾于真', '陳香如'], note: '2 人房' },
-  { id: 'room-G', label: 'G 房', members: ['曾唯展', '黃建輔'], note: '2 人房' },
-  { id: 'room-H', label: 'H 房', members: ['黃思瑜', '黃鈺婷'], note: '2 人房' },
-  { id: 'room-I', label: 'I 房', members: ['賴惟平', '賴惟中'], note: '2 人房' },
-  { id: 'room-J', label: 'J 房', members: ['王子維', '謝昆霖', '謝采璇'], note: '2 人房（含 2 位不佔床小朋友）' },
-  { id: 'room-K', label: 'K 房', members: ['王威淳'], note: '指定單人房' },
+  { id: 'room-A', label: 'A 房', members: ['蘇郁淳', '陳億'], note: '2 人房' },
+  { id: 'room-B', label: 'B 房', members: ['陳麒伊', '陳心唯', '陳可甯'], note: '3 人房' },
+  { id: 'room-C', label: 'C 房', members: ['陳幸君', '陳王素清'], note: '2 人房' },
+  { id: 'room-D', label: 'D 房', members: ['陳玫峰', '陳香君'], note: '2 人房' },
+  { id: 'room-E', label: 'E 房', members: ['曾怡璁', '陳美如'], note: '2 人房' },
+  { id: 'room-F', label: 'F 房', members: ['曾于真', '曾唯展'], note: '2 人房' },
+  { id: 'room-G', label: 'G 房', members: ['黃建輔', '黃思瑜'], note: '2 人房' },
+  { id: 'room-H', label: 'H 房', members: ['賴惟平', '賴惟中'], note: '2 人房' },
+  { id: 'room-I', label: 'I 房', members: ['陳香如', '黃鈺婷', '謝昆霖', '謝采璇'], note: '2 人房規格 · 實際入住 4 人（2 大 2 小，2 位小朋友不算人頭）' },
+  { id: 'room-J', label: 'J 房', members: ['王威淳'], note: '指定單人房' },
+  { id: 'room-K', label: 'K 房', members: ['王子維'], note: '單人房' },
 ]
 
 export const HOTELS = [

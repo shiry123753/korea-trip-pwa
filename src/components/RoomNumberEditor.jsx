@@ -1,16 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ROOMS } from '../data/rooms'
 import { useRoomNumbers, saveRoomNumbers } from '../hooks/useRoomNumbers'
 import styles from './Backend.module.css'
 
-// 後台：check-in 後登錄各房門牌號，住宿頁即時更新（免重新部署）
+// 後台：check-in 後登錄各房門牌號，住宿頁即時更新（免重新部署）。
+// 支援隨時修改／覆蓋：開頁時載入已存的房號，改完再存即覆蓋。
 export default function RoomNumberEditor() {
   const saved = useRoomNumbers()
   const [nums, setNums] = useState({})
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  const loaded = useRef(false)
 
-  useEffect(() => { if (saved) setNums(saved) }, [saved])
+  // 只在第一次拿到雲端資料時帶入輸入框，之後保留你正在編輯的內容（不被即時快照覆蓋）
+  useEffect(() => {
+    if (saved && !loaded.current) { setNums(saved); loaded.current = true }
+  }, [saved])
 
   async function save() {
     setBusy(true); setMsg('')
