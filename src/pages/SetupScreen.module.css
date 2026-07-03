@@ -22,6 +22,14 @@
   overflow-y: auto;
 }
 
+.cover {
+  width: 100%;
+  height: 130px;
+  object-fit: contain;
+  display: block;
+  margin: 4px auto 10px;
+}
+
 .title  { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
 .sub    { font-size: 14px; color: rgba(26,20,16,0.5); margin-bottom: 8px; }
 .label  { font-size: 13px; font-weight: 700; color: rgba(26,20,16,0.5); margin-top: 10px; }

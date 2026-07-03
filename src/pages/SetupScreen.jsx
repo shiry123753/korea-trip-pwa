@@ -22,6 +22,7 @@ export default function SetupScreen() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
+        <img className={styles.cover} src="/IMG_6353.jpg" alt="釜山旅行封面" />
         <div className={styles.title}>釜山旅行 🇰🇷</div>
         <div className={styles.sub}>先設定一下你自己</div>
 

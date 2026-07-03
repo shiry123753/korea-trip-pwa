@@ -17,13 +17,9 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging()
 
-// App 在背景 / 關閉時收到推播 → 顯示系統通知
-messaging.onBackgroundMessage((payload) => {
-  const title = payload?.notification?.title || '釜山之旅'
-  const body = payload?.notification?.body || ''
-  self.registration.showNotification(title, {
-    body,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-  })
+// 我們送的是含 notification 欄位的訊息，FCM 在背景會「自動顯示一則」通知。
+// 若在這裡再呼叫 showNotification，就會變成兩則（重複）。
+// 因此這裡不再手動顯示，交給 FCM 自動顯示，確保只有一則。
+messaging.onBackgroundMessage(() => {
+  // no-op：避免與 FCM 自動顯示重複
 })
