@@ -1,0 +1,58 @@
+.busWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.busImg {
+  height: auto;
+  display: block;
+  transform-origin: center bottom;
+  animation: busBob 2.6s ease-in-out infinite;
+}
+
+/* 待機呼吸/搖晃 */
+@keyframes busBob {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50%      { transform: translateY(-2px) rotate(1.2deg); }
+}
+
+/* 點擊提示氣泡 */
+.busTip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 7px;
+  white-space: nowrap;
+  background: #1a1410;
+  color: #faf8f5;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 9px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+  z-index: 30;
+  pointer-events: none;
+  animation: tipPop 0.18s ease-out;
+}
+.busTip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1a1410;
+}
+@keyframes tipPop {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* 尊重「減少動態效果」的系統設定 */
+@media (prefers-reduced-motion: reduce) {
+  .busImg { animation: none; }
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useMeetingInfo } from '../hooks/useMeetingInfo'
 import { ymdLocal, addDaysYmd, mdLabel } from '../data/dateUtil'
+import BusIcon from './BusIcon'
 import styles from './MeetingCard.module.css'
 
 // 今日頁「集合時間」（唯讀）。標籤依「集合資料綁定的日期」對比「裝置當天日期」自動切換：
@@ -39,7 +40,7 @@ export default function MeetingCard({ overrideToday }) {
 
   return (
     <div className={styles.card}>
-      <span className={styles.icon}>🚌</span>
+      <BusIcon size={46} tip="準時上車唷！🚌" />
       <div className={styles.body}>
         <div className={styles.label}>{label}</div>
         <div className={styles.value}>

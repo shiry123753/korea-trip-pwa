@@ -48,6 +48,16 @@
 /* 已註冊狀態 */
 .doneRow { display: flex; align-items: center; gap: 10px; }
 .doneText { font-size: 15px; font-weight: 800; color: #4a7a4a; }
+.hideBtn {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: #a89f96;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-family: inherit;
+}
 
 .tokenBox { margin-top: 12px; font-size: 12.5px; color: #5a5048; }
 .tokenBox summary { cursor: pointer; font-weight: 700; }

@@ -5,7 +5,7 @@ import {
 } from '../push/push'
 import styles from './PushOptIn.module.css'
 
-export default function PushOptIn() {
+export default function PushOptIn({ debug = false, onHide }) {
   const [cap, setCap] = useState(null) // null = 尚未判斷
   const [registered, setRegistered] = useState(false)
   const [token, setToken] = useState('')
@@ -37,16 +37,21 @@ export default function PushOptIn() {
 
   if (cap === null) return null
 
-  // 已成功註冊：綠色狀態 + 顯示 token 供測試
+  // 已成功註冊：正常情況「隱藏」（團員看不到）。
+  // 只有除錯模式（隱藏手勢 / ?push=1）才顯示 token、重新註冊等除錯資訊。
   if (registered) {
+    if (!debug) return null
     return (
       <div className={styles.card}>
         <div className={styles.doneRow}>
           <span className={styles.icon}>🔔</span>
-          <div className={styles.doneText}>已開啟並註冊此裝置</div>
+          <div className={styles.doneText}>已註冊此裝置（除錯）</div>
+          {onHide && (
+            <button className={styles.hideBtn} onClick={onHide} aria-label="收起">✕</button>
+          )}
         </div>
-        <details className={styles.tokenBox}>
-          <summary>顯示此裝置的推播 token（測試用）</summary>
+        <details className={styles.tokenBox} open>
+          <summary>此裝置的推播 token</summary>
           <textarea className={styles.tokenArea} readOnly value={token} onClick={(e) => e.target.select()} />
           <div className={styles.tokenHint}>把這串貼到 Firebase Console → Cloud Messaging → 傳送測試訊息。</div>
         </details>
@@ -54,6 +59,7 @@ export default function PushOptIn() {
           {busy ? '重新註冊中…' : '重新註冊 / 更新 token'}
         </button>
         {msg && <div className={styles.msg}>{msg}</div>}
+        <div className={styles.tokenHint}>此區只有你（用隱藏手勢或 ?push=1）看得到；重新整理後會自動收起。</div>
       </div>
     )
   }

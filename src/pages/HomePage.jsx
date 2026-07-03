@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
 // 第二階段（真實 GPS）再啟用： import { useGpsProgress } from '../hooks/useGpsProgress'
 import { getTodayDayData, DAYS } from '../data/itinerary'
@@ -7,6 +7,7 @@ import WeatherCard from '../components/WeatherCard'
 import SpotSheet from '../components/SpotSheet'
 import PushOptIn from '../components/PushOptIn'
 import MeetingCard from '../components/MeetingCard'
+import BusIcon from '../components/BusIcon'
 import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
 
@@ -16,9 +17,21 @@ export default function HomePage() {
   const [showProfile, setShowProfile] = useState(false)
 
   // 隱藏「日期預覽」：只有網址帶 ?preview=1 才出現，團員看不到，也不會寫入任何資料
-  const previewOn = typeof window !== 'undefined'
-    && new URLSearchParams(window.location.search).get('preview') === '1'
+  const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
+  const previewOn = search.get('preview') === '1'
   const [previewDate, setPreviewDate] = useState(null) // null = 真實今天
+
+  // 推播除錯卡：預設隱藏；?push=1 或「連點問候語 5 下」才顯示（一般團員不會看到）
+  const [pushDebug, setPushDebug] = useState(false)
+  const tapRef = useRef({ n: 0, t: 0 })
+  function secretTap() {
+    const nowT = Date.now()
+    const s = tapRef.current
+    if (nowT - s.t > 1500) s.n = 0
+    s.n += 1; s.t = nowT
+    if (s.n >= 5) { s.n = 0; setPushDebug(true) }
+  }
+  const showPushDebug = pushDebug || search.get('push') === '1'
   const [previewMin, setPreviewMin]   = useState(null) // 預覽用「模擬時間」（當日分鐘）；null = 用真實時間
 
   const todayDay = getTodayDayData(previewDate)
@@ -107,7 +120,7 @@ export default function HomePage() {
       {/* ── Hero ── */}
       <div className={styles.hero}>
         <div className={styles.heroTop}>
-          <span className={styles.dayTag}>
+          <span className={styles.dayTag} onClick={secretTap}>
             嗨，{getDisplayName(session)}！
           </span>
           <button className={styles.profileBtn} onClick={() => { track('feature_click', { page: 'open_profile' }); setShowProfile(true) }}>
@@ -124,8 +137,9 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* 推播授權（功能一）：放明顯處，第一次打開就看得到 */}
-      <PushOptIn />
+      {/* 推播授權：未註冊者看得到（可授權）；註冊完成後自動隱藏。
+          除錯卡只有 ?push=1 或連點問候語 5 下才會出現。 */}
+      <PushOptIn debug={showPushDebug} onHide={() => setPushDebug(false)} />
 
       {!isTripDate ? (
         <div className={styles.noTrip}>
@@ -185,12 +199,14 @@ export default function HomePage() {
                         <div className={`${styles.legTrack}${isActive ? ` ${styles.legTrackActive}` : ''}`}>
                           <div className={styles.legFill} style={{ height: `${legPct}%` }} />
                           {isActive && (
-                            <img
-                              src="/IMG_6315.jpg"
-                              alt="巴士"
-                              className={styles.bus}
-                              style={{ top: `${legPct}%` }}
-                            />
+                            <div className={styles.busOnTrack} style={{ top: `${legPct}%` }}>
+                              <BusIcon
+                                size={40}
+                                tip={prog.remainingMin != null
+                                  ? `還有 ${prog.remainingMin} 分抵達 ${prog.destSpot?.name ?? ''}`
+                                  : undefined}
+                              />
+                            </div>
                           )}
                         </div>
                       )}
