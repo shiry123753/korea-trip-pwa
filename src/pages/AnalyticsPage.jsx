@@ -9,6 +9,8 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { computeMetrics, fmtDuration, fmtDateTime } from '../analytics/metrics'
 import { formatDeviceInfo } from '../analytics/deviceInfo'
+import PushSender from '../components/PushSender'
+import MeetingEditor from '../components/MeetingEditor'
 import styles from './AnalyticsPage.module.css'
 
 const PASSWORD = import.meta.env.VITE_ANALYTICS_PASSWORD
@@ -181,6 +183,10 @@ function Dashboard() {
           <button className={styles.refreshBtn} onClick={handleExportCsv} disabled={!rawEvents}>⬇ 匯出 CSV</button>
         </div>
       </header>
+
+      {/* 發送推播 + 集合時間設定（功能一/二/三） */}
+      <PushSender />
+      <MeetingEditor />
 
       <div className={styles.rangeBar}>
         {RANGE_OPTS.map((r) => (

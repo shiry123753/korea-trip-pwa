@@ -6,6 +6,7 @@ import { useScheduleProgress, getDayLegs } from '../hooks/useScheduleProgress'
 import WeatherCard from '../components/WeatherCard'
 import SpotSheet from '../components/SpotSheet'
 import PushOptIn from '../components/PushOptIn'
+import MeetingCard from '../components/MeetingCard'
 import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
 
@@ -135,6 +136,9 @@ export default function HomePage() {
         <>
           {/* 第二階段（真實 GPS「前往下一站」卡片）暫時停用，改由下方巴士時間軸顯示，
               避免第一階段就要求定位授權。程式碼保留在檔案下方 GpsProgressCard，之後可再啟用。 */}
+
+          {/* ── 今日集合（後台設定，唯讀；沒設定時不顯示）── */}
+          <MeetingCard />
 
           {/* ── 天氣 ── */}
           <div className={styles.section}>

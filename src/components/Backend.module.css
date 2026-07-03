@@ -1,0 +1,82 @@
+/* 後台區塊（發送推播 / 集合時間）共用樣式 —— 與 /analytics 一致的 ivory + ink */
+.section {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.secTitle {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1a1410;
+  display: inline-block;
+}
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.input {
+  flex: 1;
+  min-width: 120px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  background: #faf8f5;
+  outline: none;
+  margin-bottom: 10px;
+}
+.input:focus { border-color: #1a1410; }
+
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  background: #faf8f5;
+  outline: none;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+.textarea:focus { border-color: #1a1410; }
+
+.quickRow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.quick {
+  padding: 8px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+  background: #f4efe1;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  color: #1a1410;
+}
+
+.btn, .btnPrimary {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn { background: #1a1410; color: #faf8f5; }
+.btnPrimary { background: #c0392b; color: #fff; }
+.btn:disabled, .btnPrimary:disabled { opacity: 0.5; }
+
+.msg { margin-top: 10px; font-size: 13.5px; color: #5a5048; line-height: 1.5; }
+.hint { margin-top: 8px; font-size: 12px; color: #a89f96; }
