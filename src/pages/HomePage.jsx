@@ -8,6 +8,7 @@ import SpotSheet from '../components/SpotSheet'
 import PushOptIn from '../components/PushOptIn'
 import MeetingCard from '../components/MeetingCard'
 import BusIcon from '../components/BusIcon'
+import { SpotIcon } from '../components/HandDrawn'
 import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
 
@@ -316,7 +317,7 @@ function SpotRow({ spot, isCurrent, onClick }) {
       onClick={onClick}
       style={isCurrent ? { border: '2px solid #1a1410' } : {}}
     >
-      <span className={styles.spotEmoji}>{spot.emoji}</span>
+      <span className={styles.spotEmoji}><SpotIcon spot={spot} /></span>
       <div className={styles.spotInfo}>
         <div className={styles.spotName}>{spot.name}</div>
         <div className={styles.spotMeta}>

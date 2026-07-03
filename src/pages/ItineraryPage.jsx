@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DAYS } from '../data/itinerary'
 import SpotSheet from '../components/SpotSheet'
+import { SpotIcon, HotelIcon } from '../components/HandDrawn'
 import styles from './ItineraryPage.module.css'
 
 const DAY_LABELS = ['日','一','二','三','四','五','六']
@@ -45,8 +46,8 @@ export default function ItineraryPage() {
       <div className={styles.dayHeader}>
         <div className={styles.dayLabel}>{activeDay.label}・{activeDay.subtitle}</div>
         {activeDay.hotel && (
-          <div className={styles.dayHotel}>
-            🏨 {activeDay.hotel.name}
+          <div className={styles.dayHotel} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ display: 'inline-flex', width: 22 }}><HotelIcon size={22} /></span>{activeDay.hotel.name}
             <span style={{ color: '#a09890' }}>｜{activeDay.hotel.phone}</span>
           </div>
         )}
@@ -67,7 +68,7 @@ export default function ItineraryPage() {
                 className={styles.timelineCard}
                 onClick={() => setSheetSpot(spot)}
               >
-                <span className={styles.cardEmoji}>{spot.emoji}</span>
+                <span className={styles.cardEmoji}><SpotIcon spot={spot} /></span>
                 <div className={styles.cardBody}>
                   <div className={styles.cardName}>{spot.name}</div>
                   {(spot.durationMin > 0 || spot.note) && (

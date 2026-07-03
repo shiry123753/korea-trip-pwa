@@ -1,0 +1,77 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 點擊小彈跳 */
+.poke { animation: poke 0.45s ease; }
+@keyframes poke {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.16); }
+  55%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* 待機浮動（雲/飛機） */
+.floaty { animation: floaty 4.5s ease-in-out infinite; }
+@keyframes floaty { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2px, -2px); } }
+
+.take { animation: takeoff 3s ease-in-out infinite; }
+@keyframes takeoff { 0%, 100% { transform: translate(0, 1px); } 50% { transform: translate(1.5px, -2.5px); } }
+
+.land { animation: landing 3.4s ease-in-out infinite; }
+@keyframes landing { 0%, 100% { transform: translate(0, -1px); } 50% { transform: translate(1.5px, 2px); } }
+
+/* 飯店呼吸 */
+.breath { animation: breath 4s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes breath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+/* 引擎光暈脈動 */
+.glow { animation: glow 1.5s ease-in-out infinite; }
+@keyframes glow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.85; } }
+
+/* 下雨飄動 */
+.rain { animation: raindrift 1.6s ease-in-out infinite; }
+@keyframes raindrift { 0%, 100% { transform: translateY(0); opacity: 0.85; } 50% { transform: translateY(2px); opacity: 1; } }
+
+/* 飯店窗戶燈光 */
+.win { animation: winGlow 3s ease-in-out infinite; }
+.win2 { animation: winGlow 3s ease-in-out infinite 1.5s; }
+@keyframes winGlow { 0%, 100% { fill: #f3ece0; } 50% { fill: #e0a53f; } }
+
+/* 飛機尾流虛線流動 */
+.dash { animation: dashMove 0.7s linear infinite; }
+@keyframes dashMove { to { stroke-dashoffset: -18; } }
+
+/* 雲朵飄移 */
+.cloudA { animation: driftA 5s ease-in-out infinite; }
+.cloudB { animation: driftB 6s ease-in-out infinite; }
+@keyframes driftA { 0%, 100% { transform: translateX(0); opacity: 0.9; } 50% { transform: translateX(-3px); opacity: 1; } }
+@keyframes driftB { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-2px); } }
+
+/* 飯店窗戶閃爍 */
+.winLit  { animation: winTw 2.6s ease-in-out infinite; }
+.winLit2 { animation: winTw 2.6s ease-in-out infinite 1.3s; }
+@keyframes winTw { 0%, 100% { fill: #e7e2ad; } 50% { fill: #f4ea8f; } }
+
+/* 星星閃爍 */
+.star, .star2 { transform-box: fill-box; transform-origin: center; }
+.star  { animation: starTw 2s ease-in-out infinite; }
+.star2 { animation: starTw 2.4s ease-in-out infinite 0.6s; }
+@keyframes starTw { 0%, 100% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+
+/* 月亮微光 / 吊牌微光 */
+.moon { animation: moonGlow 4s ease-in-out infinite; }
+@keyframes moonGlow { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
+
+/* 纜車擺盪（以吊點為軸） */
+.sway { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 3s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .floaty, .take, .land, .breath, .glow, .rain, .win, .win2,
+  .dash, .cloudA, .cloudB, .winLit, .winLit2, .star, .star2, .moon, .sway { animation: none; }
+}

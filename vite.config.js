@@ -20,6 +20,9 @@ export default defineConfig({
           '海東龍宮寺正面.PNG',
           '海岸天空膠囊列車兩張.PNG',
           '青沙浦踏石展望台.PNG',
+          '松島龍宮雲橋.png',
+          '松島龍宮雲橋2.png',
+          'the bay 101 百萬夜景.png',
         ],
         runtimeCaching: [
           {
