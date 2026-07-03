@@ -89,7 +89,9 @@ export default function SpotSheet({ spot, onClose }) {
         >
           <div className={styles.handle} />
           {story && (
-            <div className={styles.pullHint}>{expanded ? '下拉收合' : '↑ 上拉看歷史故事'}</div>
+            <div className={styles.pullHint}>
+              {expanded ? '下拉收合' : (story.blocks?.length ? '↑ 上拉看歷史故事' : '↑ 上拉看照片')}
+            </div>
           )}
         </div>
 
@@ -144,14 +146,14 @@ export default function SpotSheet({ spot, onClose }) {
             </div>
           )}
 
-          {/* 歷史故事（上拉展開後閱讀） */}
-          {story && (
+          {/* 歷史故事 / 插圖（上拉展開後閱讀） */}
+          {story && (story.image || story.blocks?.length > 0) && (
             <div className={styles.story}>
-              <div className={styles.storyTitle}>📖 歷史故事</div>
+              {story.blocks?.length > 0 && <div className={styles.storyTitle}>📖 歷史故事</div>}
               {story.image && (
-                <img className={styles.storyImg} src={story.image} alt={spot.name} loading="lazy" />
+                <img className={styles.storyImg} src={encodeURI(story.image)} alt={spot.name} loading="lazy" />
               )}
-              {story.blocks.map((b, i) => (
+              {story.blocks?.map((b, i) => (
                 b.h
                   ? <h3 key={i} className={styles.storyH}>{b.h}</h3>
                   : <p key={i} className={styles.storyP}>{b.p}</p>
