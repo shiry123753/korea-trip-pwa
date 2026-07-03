@@ -25,3 +25,11 @@ export async function saveMeetingInfo({ time, place }) {
     { merge: true },
   )
 }
+
+// 集合提醒的內文（發送與快捷鈕共用，避免文字各寫一份）
+export function meetingReminderText(info) {
+  const time = info?.time || ''
+  const place = info?.place || ''
+  if (!time && !place) return ''
+  return `${time} 於 ${place}集合，請大家準時到！`
+}

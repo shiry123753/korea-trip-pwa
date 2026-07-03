@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { DAYS } from '../data/itinerary'
 import { fetchWeatherForDate } from '../data/weatherApi'
-import { useMeetingInfo } from '../hooks/useMeetingInfo'
+import { useMeetingInfo, meetingReminderText } from '../hooks/useMeetingInfo'
+import { sendPush, formatSendResult } from '../data/pushClient'
 import styles from './Backend.module.css'
-
-const PW = import.meta.env.VITE_ANALYTICS_PASSWORD
 
 function ymd(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -44,11 +43,8 @@ export default function PushSender() {
 
   function quickMeeting() {
     setTitle('🚌 集合提醒')
-    if (meeting && (meeting.time || meeting.place)) {
-      setBody(`${meeting.time || ''} 於 ${meeting.place || ''}集合，請大家準時到！`)
-    } else {
-      setBody('（尚未在上方「今日集合時間」設定，先設定後再帶入）')
-    }
+    const t = meetingReminderText(meeting)
+    setBody(t || '（尚未在上方「今日集合時間」設定，先設定後再帶入）')
   }
 
   function quickCustom() { setTitle(''); setBody('') }
@@ -56,26 +52,9 @@ export default function PushSender() {
   async function send() {
     if (!title && !body) { setResult('⚠️ 標題與內文不可都空白'); return }
     setBusy(true); setResult('')
-    try {
-      const r = await fetch('/api/send-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: PW, title, body }),
-      })
-      const data = await r.json().catch(() => ({}))
-      if (!r.ok) {
-        setResult(`⚠️ ${data.error || `發送失敗（${r.status}）`}`)
-      } else if (data.total === 0) {
-        setResult(`ℹ️ ${data.note || '目前沒有已授權的裝置'}`)
-      } else {
-        const extra = `${data.failed ? `，失敗 ${data.failed} 台` : ''}${data.pruned ? `（清掉 ${data.pruned} 個失效 token）` : ''}`
-        setResult(`✅ 成功送給 ${data.sent} 台${extra}`)
-      }
-    } catch (e) {
-      setResult(`⚠️ ${e.message || '發送失敗'}（提醒：本機 npm run dev 無法測試發送，需部署到正式網站）`)
-    } finally {
-      setBusy(false)
-    }
+    const res = await sendPush({ title, body })
+    setResult(formatSendResult(res))
+    setBusy(false)
   }
 
   return (

@@ -80,3 +80,19 @@
 
 .msg { margin-top: 10px; font-size: 13.5px; color: #5a5048; line-height: 1.5; }
 .hint { margin-top: 8px; font-size: 12px; color: #a89f96; }
+
+/* 集合倒數 + 一鍵發送 */
+.countdownBox {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+}
+.countdown {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1a1410;
+  margin-bottom: 10px;
+}
+.countdownHot {
+  color: #c0392b;
+}
