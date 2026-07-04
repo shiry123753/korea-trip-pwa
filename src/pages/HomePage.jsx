@@ -4,6 +4,7 @@ import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
 import { getTodayDayData, DAYS } from '../data/itinerary'
 import { useScheduleProgress, getDayLegs } from '../hooks/useScheduleProgress'
 import { useTripStatus } from '../hooks/useTripStatus'
+import { useLiveEta } from '../hooks/useLiveEta'
 import WeatherCard from '../components/WeatherCard'
 import SpotSheet from '../components/SpotSheet'
 import PushOptIn from '../components/PushOptIn'
@@ -13,19 +14,22 @@ import { SpotIcon } from '../components/HandDrawn'
 import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
 
-// 後台手動「移動中」時，組出跟 useScheduleProgress 相同格式的進度物件
-function buildManualProg(day, destId, departAtMs) {
+// 後台手動「移動中」時，組出跟 useScheduleProgress 相同格式的進度物件。
+// liveTravelMin 有值（Google 即時路況）就用它當該段行車時間，否則退回時間表。
+function buildManualProg(day, destId, departAtMs, liveTravelMin) {
   const idx = day.spots.findIndex((s) => s.id === destId)
   if (idx < 0) return null
   if (idx === 0) {
-    return { phase: 'moving', movingLegIndex: -1, legProgress: 0, remainingMin: null, destSpot: day.spots[0], atSpotIndex: -1 }
+    return { phase: 'moving', movingLegIndex: -1, legProgress: 0, remainingMin: null, destSpot: day.spots[0], atSpotIndex: -1, live: false }
   }
   const leg = getDayLegs(day)[idx - 1]
-  const travel = leg && leg.travel > 0 ? leg.travel : 60
+  const tableTravel = leg && leg.travel > 0 ? leg.travel : 60
+  const live = liveTravelMin != null && liveTravelMin > 0
+  const travel = live ? liveTravelMin : tableTravel
   const elapsed = departAtMs ? (Date.now() - departAtMs) / 60000 : 0
   const legProgress = Math.min(0.98, Math.max(0.02, elapsed / travel))
   const remainingMin = Math.max(0, Math.round(travel - elapsed))
-  return { phase: 'moving', movingLegIndex: idx - 1, legProgress, remainingMin, destSpot: day.spots[idx], atSpotIndex: -1 }
+  return { phase: 'moving', movingLegIndex: idx - 1, legProgress, remainingMin, destSpot: day.spots[idx], atSpotIndex: -1, live }
 }
 
 export default function HomePage() {
@@ -60,8 +64,14 @@ export default function HomePage() {
 
   // 後台手動覆蓋（GPS/時間表誤判時）：mode='moving' → 強制顯示移動中
   const tripStatus = useTripStatus()
-  const prog = (!simulating && tripStatus?.mode === 'moving' && todayDay)
-    ? (buildManualProg(todayDay, tripStatus.destId, tripStatus.departAtMs) ?? autoProg)
+  const manualDestId = (!simulating && tripStatus?.mode === 'moving' && todayDay) ? tripStatus.destId : null
+  const destIdx = manualDestId ? todayDay.spots.findIndex((s) => s.id === manualDestId) : -1
+  const originAddr = destIdx > 0 ? (todayDay.spots[destIdx - 1]?.address || '') : ''
+  const destAddr = destIdx >= 0 ? (todayDay.spots[destIdx]?.address || '') : ''
+  // 移動中且兩站都有地址 → 抓 Google 即時路況；否則不啟用（退回時間表）
+  const liveEta = useLiveEta(originAddr, destAddr, !!manualDestId && destIdx > 0 && !!originAddr && !!destAddr)
+  const prog = manualDestId
+    ? (buildManualProg(todayDay, manualDestId, tripStatus.departAtMs, liveEta.durationMin) ?? autoProg)
     : autoProg
 
   const isTripDate = !!todayDay
@@ -282,7 +292,7 @@ function StatusLine({ prog, spot }) {
   let text
   if (prog.phase === 'moving') {
     text = prog.remainingMin > 0
-      ? `🚌 預計還有 ${fmtMinutes(prog.remainingMin)}抵達 ${prog.destSpot?.name ?? ''}`
+      ? `🚌 預計還有 ${fmtMinutes(prog.remainingMin)}抵達 ${prog.destSpot?.name ?? ''}${prog.live ? '（即時路況）' : ''}`
       : `🚌 即將抵達 ${prog.destSpot?.name ?? ''}`
   } else if (prog.phase === 'before') {
     text = '🕐 尚未出發'
