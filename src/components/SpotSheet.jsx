@@ -9,7 +9,6 @@ export default function SpotSheet({ spot, onClose }) {
   const open = !!spot
   useModalChrome(open)
 
-  const [foodLoading, setFoodLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [dragY, setDragY] = useState(0)
   const [dragging, setDragging] = useState(false)
@@ -55,21 +54,11 @@ export default function SpotSheet({ spot, onClose }) {
     else setExpanded((v) => !v) // 輕點
   }
 
-  async function handleFindFood() {
-    track('feature_click', { page: 'find_restaurant' })
-    setFoodLoading(true)
-    try {
-      await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 }),
-      ).then((pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords
-        window.open(`https://www.google.com/maps/search/맛집/@${lat},${lng},16z`, '_blank', 'noopener')
-      })
-    } catch { /* ignore */ }
-    setFoodLoading(false)
-  }
-
   if (!spot) return null
+
+  // 「附近找吃的」：改用 <a> 直接開 Google Maps 搜尋景點附近餐廳。
+  // 手機版原本在定位（await）之後才 window.open 會被彈窗攔截 → 點了沒反應；用連結就正常。
+  const foodUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((spot.address || '釜山') + ' 餐廳 美食')}`
 
   const sheetStyle = dragY ? { transform: `translateY(${Math.max(0, dragY)}px)` } : undefined
 
@@ -121,14 +110,15 @@ export default function SpotSheet({ spot, onClose }) {
               >
                 🗺 導航過來
               </a>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnSecondary} ${foodLoading ? styles.btnDisabled : ''}`}
-                onClick={handleFindFood}
-                disabled={foodLoading}
+              <a
+                className={`${styles.btn} ${styles.btnSecondary}`}
+                href={foodUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track('feature_click', { page: 'find_restaurant' })}
               >
-                {foodLoading ? '定位中…' : '🍜 附近找吃的'}
-              </button>
+                🍜 附近找吃的
+              </a>
             </div>
           )}
 
