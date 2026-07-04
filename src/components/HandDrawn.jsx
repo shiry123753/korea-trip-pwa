@@ -204,9 +204,25 @@ export function LuggageIcon({ size = 40 }) {
   )
 }
 
-// 依景點資料挑對應圖示（同類別共用，集中管理，方便維護）
+// 有手繪插畫縮圖的景點（public/spoticon/<id>.png）
+const PHOTO_ICONS = new Set([
+  'cheongsapo-observatory', 'cheongsapo-lighthouse', 'busan-luge', 'haedong-yonggung',
+  'sky-capsule', 'gamcheon', 'songdo-bridge', 'the-bay-101',
+])
+
+// 景點插畫縮圖 icon（去景後的方形小縮圖）
+function PhotoIcon({ id, alt = '景點' }) {
+  return (
+    <Poke alt={alt}>
+      <img src={`/spoticon/${id}.png`} alt={alt} className={styles.photoIcon} draggable="false" />
+    </Poke>
+  )
+}
+
+// 依景點資料挑對應圖示（有插畫用縮圖，其餘用扁平綠圖示；集中管理，方便維護）
 export function SpotIcon({ spot }) {
   if (!spot) return null
+  if (PHOTO_ICONS.has(spot.id)) return <PhotoIcon id={spot.id} alt={spot.name} />
   if (spot.isHotel) return <HotelIcon />
   const e = spot.emoji
   if (e === '✈️') return <PlaneIcon mode="takeoff" />

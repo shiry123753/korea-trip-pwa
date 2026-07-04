@@ -3,6 +3,7 @@ import { useSession, clearSession, getDisplayName } from '../hooks/useSession'
 // 第二階段（真實 GPS）再啟用： import { useGpsProgress } from '../hooks/useGpsProgress'
 import { getTodayDayData, DAYS } from '../data/itinerary'
 import { useScheduleProgress, getDayLegs } from '../hooks/useScheduleProgress'
+import { useTripStatus } from '../hooks/useTripStatus'
 import WeatherCard from '../components/WeatherCard'
 import SpotSheet from '../components/SpotSheet'
 import PushOptIn from '../components/PushOptIn'
@@ -11,6 +12,21 @@ import BusIcon from '../components/BusIcon'
 import { SpotIcon } from '../components/HandDrawn'
 import { track } from '../analytics/analytics'
 import styles from './HomePage.module.css'
+
+// 後台手動「移動中」時，組出跟 useScheduleProgress 相同格式的進度物件
+function buildManualProg(day, destId, departAtMs) {
+  const idx = day.spots.findIndex((s) => s.id === destId)
+  if (idx < 0) return null
+  if (idx === 0) {
+    return { phase: 'moving', movingLegIndex: -1, legProgress: 0, remainingMin: null, destSpot: day.spots[0], atSpotIndex: -1 }
+  }
+  const leg = getDayLegs(day)[idx - 1]
+  const travel = leg && leg.travel > 0 ? leg.travel : 60
+  const elapsed = departAtMs ? (Date.now() - departAtMs) / 60000 : 0
+  const legProgress = Math.min(0.98, Math.max(0.02, elapsed / travel))
+  const remainingMin = Math.max(0, Math.round(travel - elapsed))
+  return { phase: 'moving', movingLegIndex: idx - 1, legProgress, remainingMin, destSpot: day.spots[idx], atSpotIndex: -1 }
+}
 
 export default function HomePage() {
   const session = useSession()
@@ -40,7 +56,13 @@ export default function HomePage() {
   // 進度來源（第一階段：時間表推算，零成本、不需定位）。
   // 預覽時用模擬時間覆蓋「現在幾點」；第二階段可在這層之上用真實 GPS 覆蓋。
   const simulating = previewOn && !!previewDate && previewMin != null
-  const prog = useScheduleProgress(todayDay, simulating ? previewMin : undefined)
+  const autoProg = useScheduleProgress(todayDay, simulating ? previewMin : undefined)
+
+  // 後台手動覆蓋（GPS/時間表誤判時）：mode='moving' → 強制顯示移動中
+  const tripStatus = useTripStatus()
+  const prog = (!simulating && tripStatus?.mode === 'moving' && todayDay)
+    ? (buildManualProg(todayDay, tripStatus.destId, tripStatus.departAtMs) ?? autoProg)
+    : autoProg
 
   const isTripDate = !!todayDay
   const spots = todayDay?.spots ?? []

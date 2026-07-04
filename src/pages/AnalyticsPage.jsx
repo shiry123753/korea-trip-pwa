@@ -12,6 +12,7 @@ import { formatDeviceInfo } from '../analytics/deviceInfo'
 import PushSender from '../components/PushSender'
 import MeetingEditor from '../components/MeetingEditor'
 import RoomNumberEditor from '../components/RoomNumberEditor'
+import TripStatusEditor from '../components/TripStatusEditor'
 import styles from './AnalyticsPage.module.css'
 
 const PASSWORD = import.meta.env.VITE_ANALYTICS_PASSWORD
@@ -185,7 +186,8 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* 發送推播 + 集合時間 + 房號登錄 */}
+      {/* 行程狀態 + 發送推播 + 集合時間 + 房號登錄 */}
+      <TripStatusEditor />
       <PushSender />
       <MeetingEditor />
       <RoomNumberEditor />

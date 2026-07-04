@@ -15,6 +15,18 @@
   100% { transform: scale(1); }
 }
 
+/* 景點插畫縮圖 icon */
+.photoIcon {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  display: block;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+  animation: floaty 4.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .photoIcon { animation: none; } }
+
 /* 待機浮動（雲/飛機） */
 .floaty { animation: floaty 4.5s ease-in-out infinite; }
 @keyframes floaty { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2px, -2px); } }
